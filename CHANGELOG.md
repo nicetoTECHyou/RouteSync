@@ -10,6 +10,43 @@ Alle Änderungen sind chronologisch dokumentiert. Versionsnummern folgen [Semant
 
 ---
 
+## [0.5.0] — 2026-04-14
+
+### Major — POI Aggregator: Multi-Source, Smart Dedup, Local Data
+
+#### New Features
+- **POI Aggregator**: Modulares System zum Suchen und Zusammenführen von POI-Daten aus mehreren Quellen (OSM + lokale Dateien). Keine API-Keys nötig.
+- **Multi-Query Overpass für Ladesäulen**: Enhanced Charging Query sucht nicht nur `amenity=charging_station`, sondern zusätzlich nach `supercharge=yes`, `brand=...` und `operator=...` für 30+ Netzwerke in Südosteuropa:
+  - **Kroatien**: ELEN, Petrol, INA, MOL, Greenway, e-Mobi, AMZS
+  - **Türkei**: Trugo (Togg), ZES, Aygaz, Shell, E-Sharj, Voltrun, ERFU
+  - **Serbien**: NIS (Gazprom Neft), Energopro, Merkur
+  - **Bulgarien**: EVN, E ON, OmV, Shell Recharge
+  - **Europaweit**: Ionity, Tesla, ABB, Schneider
+- **Smart Deduplication**: Union-Find Algorithmus mit geografischem Bucketing für O(n) Performance. Erkennt Dubletten anhand variablen Radius-Abgleichs (Ladesäulen: 50m, Parkplätze: 50m, Krankenhäuser: 200m). OSM-Daten haben Priorität, lokale Daten füllen Lücken auf.
+- **Lokale POI-Datensätze (Offline-Backup)**: 4 statische Datensätze mit zusammen 50 Ladesäulen:
+  - Kroatien ELEN (12 Stationen): Zagreb, Split, Rijeka, Osijek, Zadar, Pula, Dubrovnik, Šibenik, Karlovac, Slavonski Brod, Varaždin, Vukovar
+  - Türkei Trugo/ZES (20 Stationen): Istanbul (4), Ankara (2), Izmir (2), Bursa (2), Antalya (2), Afyon, Burdur, Konya, Aksaray, Edirne, Tekirdağ
+  - Serbien NIS/e-Mobi (8 Stationen): Belgrad, Novi Sad, Niš, Subotica, Čačak, Kragujevac, Zlatibor, Vršac
+  - Bulgarien EVN/Shell (10 Stationen): Sofia (2), Plovdiv, Varna, Burgas, Stara Zagora, Veliko Tarnovo, Ruse, Blagoevgrad, Pernik
+- **Aggregator Stats Bar**: Zeigt nach der Suche die Statistik: `OSM: X | Lokal: Y | Merge: Z` mit aktiven Quellen
+- **Source Badges**: Jeder POI zeigt seine Datenquelle: "Lokal" (grün) für statische Daten, "Merge" (amber) für zusammengeführte Datensätze
+- **Local Data Toggle**: Button zum Ein-/Ausschalten lokaler Datensätze (Standard: AN)
+
+#### New Files
+- `src/lib/poi-aggregator.ts` — Haupt-Aggregator: Orchestrat OSM + lokale Quellen + Dedup
+- `src/lib/poi-dedup.ts` — Smart Deduplication: Union-Find + geografisches Bucketing
+- `src/lib/poi-local.ts` — Lokaler POI Data Loader mit Registry-System
+- `src/data/poi/croatia-charging.ts` — ELEN Kroatien Datensatz (12 Stationen)
+- `src/data/poi/turkey-charging.ts` — Trugo/ZES Türkei Datensatz (20 Stationen)
+- `src/data/poi/serbia-charging.ts` — NIS Serbien Datensatz (8 Stationen)
+- `src/data/poi/bulgaria-charging.ts` — EVN/Shell Bulgarien Datensatz (10 Stationen)
+
+#### Changed Files
+- `src/types/index.ts` — POISource Type, POI.source Feld
+- `src/components/sidebar/POIPanel.tsx` — Aggregator-Integration, Stats Bar, Source Badges, Local Toggle
+
+---
+
 ## [0.4.4] — 2026-04-14
 
 ### Patch — UI Fixes: POI Detail-Expand, Overlay Safety

@@ -10,6 +10,34 @@ Alle Änderungen sind chronologisch dokumentiert. Versionsnummern folgen [Semant
 
 ---
 
+## [0.4.4] — 2026-04-14
+
+### Patch — UI Fixes: POI Detail-Expand, Overlay Safety
+
+#### New Features
+- **POI Detail-Expand**: Jeder POI in der Sidebar-Liste ist jetzt anklickbar. Ein Klick klappt ein umfangreiches Detail-Panel auf mit ALLEN verfügbaren Overpass-Tag-Daten — dieselben Infos wie im Karten-Popup:
+  - **Ladesäulen**: Alle Steckertypen (T2, CCS, CHAdeMO, Schuko, CEE, Tesla) mit Leistung, Anzahl, Kabel-Info; Gesamt-Leistung; Bezahlung (Kontaktlos, App, Karte, Bargeld, Auth); Fahrrad/Auto; Kapazität; Gebühr
+  - **Restaurant/Café**: Küche, Diät (Vegan, Vegetarisch, Glutenfrei, Halal, Koscher), Mitnehmen, Außengastronomie, Preisklasse, Lieferung, Bezahlung
+  - **Tankstelle**: Marke, Kraftstoffarten (Diesel, E5, E10, Autogas, AdBlue)
+  - **Camping**: Zelte, Wohnwagen, Sanitär, Dusche, Waschsalon, Typ, Sterne, Gebühr
+  - **Hotel/Hostel**: Zimmer, Betten, Preisklasse, Sterne, Gebühr
+  - **Parkplatz**: Typ (Fläche, Tiefgarage, Parkhaus, etc.), Gebühren, Kapazität, Bewacht, Max. Aufenthaltsdauer
+  - **Krankenhaus**: Notaufnahme, Fachbereich, Notruf-Telefon
+  - **Universal für ALLE**: Betreiber, Öffnungszeiten, Telefon, Mobil, Website, E-Mail, Rollstuhl, Toiletten, WLAN, Rauchen, Hunde, Vollständige Adresse (Straße, PLZ, Ort, Bundesland, Land), Wikipedia, Wikidata
+  - **"Auf Karte" Button**: Springt direkt zum POI mit Fly-To-Animation
+  - ChevronDown/ChevronUp Icons zeigen Expand-Status
+- **Sidebar Overflow Safety**: `overflow-hidden` auf allen TabsContent-Elementen verhindert dass Sidebar-Content auf die Karte ragt
+
+#### Fixes
+- **Sidebar overflow-hidden**: TabsContent-Elemente haben jetzt explizit `overflow-hidden` als Safety-Margin gegen Text-Overflow aus der Sidebar
+
+#### Geänderte Dateien
+- `src/components/sidebar/POIPanel.tsx` — Komplett-Rewrite: POIDetailExpanded Komponente mit allen Overpass-Tags, Expand/Collapse, "Auf Karte" Button
+- `src/components/sidebar/Sidebar.tsx` — overflow-hidden auf TabsContent, VERSION → 0.4.4
+- `VERSION` — 0.4.4
+
+---
+
 ## [0.4.2] — 2026-04-14
 
 ### Minor — Code-Review: Routing, Elevation, Sync, Export Fixes

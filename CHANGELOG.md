@@ -10,6 +10,48 @@ Alle Änderungen sind chronologisch dokumentiert. Versionsnummern folgen [Semant
 
 ---
 
+## [0.5.8] — 2026-04-14
+
+### Critical — Elevation 429 Fix (Final), Overpass Parallel Failover, CTO Audit
+
+Vollständiger CTO-Audit des gesamten Code-Stacks. Elevation 429-Problem endgültig gelöst (Mutex war todbrotten, Queue-System implementiert). Overpass-Failover von sequentiell (75s+) auf parallel (erste Antwort gewinnt) umgestellt.
+
+#### Critical Fixes
+- **E1: Elevation Mutex komplett broken**: Der Promise-basierte Mutex in `elevation.ts` hatte eine Race-Condition: wenn Reacts Effect-Cleanup `abort()` aufruft, wurde das alte Fetch asynchron abgebrochen, aber das neue Fetch konnte trotzdem passieren weil die Mutex-Freigabe und die Promise-Auflösung in der falschen Reihenfolge passierten. Symptom: `batch 0` und `batch 100` liefen parallel und bombadierten die API mit 429s.
+  - **Fix**: Komplett-Neu: FIFO Queue ersetzt den Mutex. Alle `fetchElevation()` Aufrufe werden in eine Warteschlange gestellt und streng sequenziell abgearbeitet. Keine parallelen API-Calls mehr, unabhängig davon wie schnell React Effects feuern.
+- **E2: Elevation Dedup fehlte**: Gleiche Route → mehrere Fetches mit identischem Geometry → identische API-Calls. PeerSync sendet Route-Update, Effect re-fired mit neuer Geometry-Referenz (aber selben Daten) → redundanter API-Call.
+  - **Fix**: `geometryHash()` berechnet stabilen Hash aus Geometry-Daten. Vor jedem Fetch wird der Cache geprüft — gleiche Geometrie liefert sofort Cached Result. Cache-TTL: 60s, max 5 Einträge.
+- **E3: Kein Debounce bei PeerSync Route-Updates**: PeerSync sendet `waypoints` → `route` → `alt-routes` in schneller Folge. Jedes Update löst den Elevation-Effect aus, was zu 3 rapid-fire Fetches führte (2 abgebrochen, 1 aktiv).
+  - **Fix**: 800ms Debounce im ElevationProfile-Effect. Erst nach 800ms ohne erneute Route-Änderung wird der Fetch gestartet. Verhindert die meisten redundanten API-Calls.
+
+#### High Fixes
+- **H1: Overpass Sequential Failover zu langsam**: `fetchOverpass()` probierte 4 Endpunkte sequentiell mit je 25s Timeout. Bei Ausfall der ersten 3 Endpunkte dauerte es 75s+ bevor der 4. probiert wurde. Für POI-Suche mit 6+ Queries unbrauchbar.
+  - **Fix**: `Promise.race()` — alle 4 Endpunkte gleichzeitig. Erste erfolgreiche Antwort gewinnt, alle anderen werden per `AbortController` abgebrochen. Fallback auf sequentiel nur wenn alle parallelen Requests fehlschlagen.
+- **H2: Batch-Größe zu groß**: MAX_POINTS=200 erzeugte 2 Batches à 100 Punkte. Bei 429 auf Batch 1 wurden beide Batches gelöscht → 0 Ergebnisse.
+  - **Fix**: MAX_POINTS auf 150 reduziert → 2 Batches à 100 und 1 Batch à 50. Wenn Batch 1 scheitert, hat Batch 2 noch Chance.
+- **H3: 429 Cooldown zu kurz**: 15s Cooldown reichte nicht immer aus — Open-Meteo kann längere Sperrzeiten haben.
+  - **Fix**: Cooldown auf 20s erhöht.
+
+#### Code Quality
+- **Q1: Doppelter ElevPoint-Type**: `ElevPoint` Interface war sowohl in `elevation.ts` als auch in `useElevationStore.ts` definiert.
+  - **Fix**: `useElevationStore.ts` importiert jetzt `ElevPoint` aus `elevation.ts` statt eigenen Duplikat.
+- **Q2: Production Console-Logs**: `poi-dedup.ts` loggte Dedup-Stats auch in Produktion.
+  - **Fix**: Gated hinter `process.env.NODE_ENV !== 'production'`.
+
+#### Geänderte Dateien
+- `src/lib/elevation.ts` — Komplett-Rewrite: FIFO Queue, Dedup-Cache, Queue-Processor, Batch-Reduzierung
+- `src/components/map/ElevationProfile.tsx` — 800ms Debounce, 30s Retry-Timer, AbortController nach Debounce
+- `src/lib/overpass.ts` — `Promise.race` für paralleles Failover, sequentieller Fallback
+- `src/store/useElevationStore.ts` — ElevPoint Import statt lokaler Duplikation
+- `src/lib/poi-dedup.ts` — Production-Log Gating
+- `VERSION` — 0.5.8
+- `package.json` — 0.5.8
+- `src/components/sidebar/Sidebar.tsx` — 0.5.8
+- `src/lib/export.ts` — 0.5.8
+- `src/lib/geocode.ts` — 0.5.8
+
+---
+
 ## [0.6.0] — 2026-04-14
 
 ### Major — Deep Audit & Fix: POI Maximization, AbortController, Transit Countries

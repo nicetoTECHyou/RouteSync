@@ -6,7 +6,7 @@
 
 **Gemeinsam Routen planen — POIs entdecken — 1:1 Export**
 
-**RouteSync v0.3.5**
+**RouteSync v0.3.6**
 
 <br>
 
@@ -15,7 +15,7 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 [![MapLibre](https://img.shields.io/badge/MapLibre_GL-5.22-1AAC71?logo=maplibre&logoColor=white)](https://maplibre.org)
 [![Zustand](https://img.shields.io/badge/Zustand-5-764ABC)](https://github.com/pmndrs/zustand)
-[![Version](https://img.shields.io/badge/Version-0.3.5-10B981)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-0.3.6-10B981)](./CHANGELOG.md)
 
 <br>
 
@@ -250,6 +250,7 @@ Alle Änderungen sind detailliert in der [CHANGELOG.md](./CHANGELOG.md) dokument
 
 | Version | Datum | Typ | Beschreibung |
 |---------|-------|-----|-------------|
+| **0.3.6** | 2026-04-13 | Patch | ElevationProfile Marker Crash Fix — maplibre-gl CJS/ESM Interop (Production) |
 | **0.3.5** | 2026-04-13 | Patch | ElevationProfile Marker Crash Fix — dynamischer Import mit try-catch |
 | **0.3.0** | 2026-04-13 | Major | Höhenprofil — interaktives SVG-Diagramm mit Steigungsfarben |
 | **0.2.8** | 2026-04-13 | Minor | Sonnenaufgangs-Kompass, Notizen auf Karte, Navigationsexport überarbeitet |

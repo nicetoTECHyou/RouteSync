@@ -10,6 +10,24 @@ Alle Änderungen sind chronologisch dokumentiert. Versionsnummern folgen [Semant
 
 ---
 
+## [0.3.6] — 2026-04-13
+
+### Patch — ElevationProfile Marker Crash Fix (Production)
+
+#### Fixes
+- **maplibre-gl ESM/CJS Interop**: `maplibre-gl` v5.22 ist ein ESM-Paket mit CJS-`main`-Entry. Im Webpack-Production-Bundle liefert `import maplibregl from 'maplibre-gl'` ein Wrapper-Objekt `{ default: {...} }` statt des Namespace. Dadurch war `maplibregl.Marker` in der Produktion `undefined`, was bei jedem Hover über das Höhenprofil zum App-Crash führte (hunderte Fehler pro Sekunde).
+- **Lösung (3 Ebenen)**:
+  1. `transpilePackages: ['maplibre-gl']` in `next.config.ts` — Next.js transpiliert maplibre-gl durch SWC, was den CJS→ESM Default-Export korrekt handhabt (Root-Cause-Fix)
+  2. Defensiver Import-Pattern in `ElevationProfile.tsx`: `(maplibreglRaw as any).default ?? maplibreglRaw` + explizite `MarkerCtor`-Prüfung mit `try-catch` (Defense-in-Depth)
+  3. Defensiver Import-Pattern in `RoutePanel.tsx`: Named Import `LngLatBounds` über Default-Import mit `.default`-Fallback (verhindert potenziellen Route-Bounds-Crash)
+
+#### Geänderte Dateien
+- `next.config.ts` — `transpilePackages: ['maplibre-gl']`
+- `src/components/map/ElevationProfile.tsx` — defensiver CJS/ESM Interop-Import, Marker availability check
+- `src/components/sidebar/RoutePanel.tsx` — defensiver CJS/ESM Interop-Import für `LngLatBounds`
+
+---
+
 ## [0.3.5] — 2026-04-13
 
 ### Patch — ElevationProfile Marker Crash Fix

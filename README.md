@@ -6,7 +6,7 @@
 
 **Gemeinsam Routen planen — POIs entdecken — 1:1 Export**
 
-**RouteSync v0.3.6**
+**RouteSync v0.4.3**
 
 <br>
 
@@ -15,7 +15,7 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 [![MapLibre](https://img.shields.io/badge/MapLibre_GL-5.22-1AAC71?logo=maplibre&logoColor=white)](https://maplibre.org)
 [![Zustand](https://img.shields.io/badge/Zustand-5-764ABC)](https://github.com/pmndrs/zustand)
-[![Version](https://img.shields.io/badge/Version-0.3.6-10B981)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-0.4.3-10B981)](./CHANGELOG.md)
 
 <br>
 
@@ -53,9 +53,12 @@ RouteSync verwandelt die Routenplanung in ein **kollaboratives Erlebnis**. Erste
 | Feature | Beschreibung |
 |---------|-------------|
 | **5 Kartenstile** | Street, Dark, Satellite, Topo, Terrain3D — powered by MapLibre GL |
+| **3D Terrain** | Echtes 3D-Gelände mit DEM-Tiles, neigbar/drehbar (1.5x Exaggeration) |
 | **Hillshade-Overlay** | Geländeschattierung auf jedem Kartenstil |
+| **Sonnenaufgangs-Kompass** | SVG-Kompass mit Azimut, Uhrzeiten, NOAA-Formel, updated bei Pan/Zoom |
+| **Notizen auf der Karte** | Rechtsklick → bearbeitbare/löschbare Notiz-Marker, 6 Farben |
 | **Layer-Kontrolle** | Routenlinie, Alt-Routen, POI-Marker, Wegpunkte, Straßennamen ein/aus |
-| **Kontextmenü** | Rechtsklick auf der Karte für Start/Via/Ziel-Platzierung |
+| **Kontextmenü** | Rechtsklick auf der Karte für Start/Via/Ziel/Notiz-Platzierung |
 
 ### Routenplanung
 | Feature | Beschreibung |
@@ -71,24 +74,43 @@ RouteSync verwandelt die Routenplanung in ein **kollaboratives Erlebnis**. Erste
 | Feature | Beschreibung |
 |---------|-------------|
 | **16 Kategorien** | Ladesäule, Restaurant, Café, Krankenhaus, Apotheke, Camping, Sehenswürdigkeit, Tankstelle, Trinkwasser, Fahrradwerkstatt, Parking, Hotel, ATM, Bäckerei + mehr |
+| **Bis 100km Radius** | 5km, 10km, 25km, 50km, 100km — erweiterter Suchradius |
+| **Emoji-Icons** | Professionelle Emoji-Icons für alle 16 Kategorien |
 | **Klickbare Filter** | Farbcodierte Kategorie-Chips zum Ein-/Ausschalten |
 | **Overpass API** | Echte OpenStreetMap-Daten mit detaillierten Popups |
+| **Ladesäulen-Details** | Anschlüsse, Steckertypen, Leistung, Bezahlung, Website |
 | **Add to Route** | Jeder POI hat "Via" und "Ziel" Buttons direkt im Popup |
+
+### Höhenprofil
+| Feature | Beschreibung |
+|---------|-------------|
+| **Interaktives SVG** | Overlay oben an der Karte, aufklappbar |
+| **Steigungsfarben** | Grün (flach), Gelb (leicht), Orange (mittel), Rot (steil) |
+| **Hover-Tooltip** | km-Position, Höhe, Steigung in % + Marker auf der Karte |
+| **Open-Meteo API** | Kostenloses Elevation-API, max 2000 Punkte, Batching mit Cache |
 
 ### Kollaborative Sitzung
 | Feature | Beschreibung |
 |---------|-------------|
-| **Session-Code** | 6-stelliger alphanumerischer Code zum Teilen |
+| **Session-Code** | 6-stelliger kryptographisch sicherer Code (crypto.getRandomValues) |
 | **3 Rollen** | Host (volle Rechte), Editor (Wegpunkte/Routen ändern), Viewer (nur lesen) |
 | **Schreibrechte** | Host kann Teilnehmern Editor-Rechte geben oder entziehen |
+| **Kick-User** | Host kann Teilnehmer aus der Session entfernen |
+| **Anti-Echo** | Remote-Updates werden nicht zurückgesendet (Echo-Vermeidung) |
 | **Web-Chat** | Echtzeit-Chat für alle Teilnehmer der Sitzung |
 | **Farb-System** | Jeder Teilnehmer bekommt eine eindeutige Farbe |
 
 ### Export
 | Feature | Beschreibung |
 |---------|-------------|
-| **GPX** | Kompatible GPX-Datei mit Wegpunkten und Track |
-| **Google Maps** | Direkter Link mit allen Wegpunkten (Clipboard) |
+| **GPX** | Kompatible GPX-Datei mit Wegpunkten und Track (XML-Injection geschützt) |
+| **KML** | Google Earth kompatibles KML-Format |
+| **GeoJSON** | Standard-GeoJSON für weitere Verarbeitung |
+| **Google Maps** | Direkter Link mit allen Wegpunkten + Fahrrad-Modus |
+| **Apple Maps** | Multi-Stop Route mit Via-Punkten |
+| **Waze** | Direkter Navigations-Link |
+| **HERE WeGo** | HERE Maps Navigation |
+| **Organic Maps** | Alle Wegpunkte als Route übergeben |
 | **JSON** | 1:1 Route mit allen Daten (Import-fähig) |
 | **Import** | JSON-Import mit Validierung und automatischer Wiederherstellung |
 
@@ -162,20 +184,28 @@ src/
 │   └── index.ts                 # TypeScript Interfaces & POI Config
 ├── store/
 │   ├── useRouteStore.ts         # Wegpunkte & Routendaten
-│   ├── useSessionStore.ts       # Sitzung, Chat, Teilnehmer
+│   ├── useSessionStore.ts       # Sitzung, Chat, Teilnehmer, Sync-Bridge
 │   ├── usePOIStore.ts           # POI-Suche & Filter
-│   └── useMapStore.ts           # Karten-Einstellungen
+│   ├── useMapStore.ts           # Karten-Einstellungen (3D, Layer)
+│   └── useElevationStore.ts     # Höhenprofil-Daten & Cache
 ├── lib/
 │   ├── utils.ts                 # cn(), formatDistance/Duration
-│   ├── session.ts               # Session-Code, Teilnehmer-Verwaltung
-│   ├── geocode.ts               # Nominatim Geocoding
-│   ├── routing.ts               # BRouter API (7 Profile, 3 Kategorien)
-│   ├── overpass.ts              # Overpass API (Retry/Fallback)
-│   └── export.ts                # GPX, Google Maps, JSON Export
+│   ├── session.ts               # Session-Code (crypto-safe), Teilnehmer-Verwaltung
+│   ├── peerSync.ts              # PeerJS WebRTC Sync-Bridge
+│   ├── geocode.ts               # Nominatim Geocoding + User-Agent
+│   ├── routing.ts               # BRouter API (7 Profile, 3 Kategorien, Dedup)
+│   ├── overpass.ts              # Overpass API (Retry/Fallback, Duplicate-Guard)
+│   ├── elevation.ts             # Open-Meteo Elevation (Batch, Retry, Backoff)
+│   ├── sun.ts                   # NOAA Sonnenstands-Berechnung
+│   ├── export.ts                # GPX, KML, GeoJSON, Maps-Links, JSON (XML-safe)
+│   ├── poiFormatter.ts          # POI Popup-Formatter (Ladesäulen, etc.)
+│   └── db.ts                    # Prisma ORM (Query-Logging Dev-only)
 ├── components/
 │   ├── map/
-│   │   ├── MapView.tsx          # MapLibre GL Karte
-│   │   └── MapControls.tsx      # Zoom, Style, Layer-Toggles
+│   │   ├── MapView.tsx          # MapLibre GL Karte + POI/Note-Marker + Terrain
+│   │   ├── MapControls.tsx      # Zoom, Style, Layer-Toggles, 3D-Controls
+│   │   ├── ElevationProfile.tsx # Interaktives Höhenprofil SVG
+│   │   └── SunriseCompass.tsx   # Sonnenaufgangs-Kompass Overlay
 │   ├── sidebar/
 │   │   ├── Sidebar.tsx          # 5-Tab Layout
 │   │   ├── RoutePanel.tsx       # Routenplanung
@@ -250,6 +280,11 @@ Alle Änderungen sind detailliert in der [CHANGELOG.md](./CHANGELOG.md) dokument
 
 | Version | Datum | Typ | Beschreibung |
 |---------|-------|-----|-------------|
+| **0.4.3** | 2026-04-14 | Patch | Static-Tar enthält jetzt README.md + CHANGELOG.md, Release-Script gefixt |
+| **0.4.2** | 2026-04-14 | Minor | Code-Review: 3 Critical, 10 High Fixes (Routing, Elevation, Sync, Export) |
+| **0.4.1** | 2026-04-14 | Patch | MapView TDZ-Crash Fix — Production White-Screen behoben |
+| **0.4.0** | 2026-04-14 | Minor | Security: Window-Globals eliminiert, XML-Injection-Schutz, Sync-Bugfixes |
+| **0.3.7** | 2026-04-13 | Patch | API Rate-Limit Fix, Elevation Retry-Loop, Nominatim User-Agent, DEM-Source Spaltung |
 | **0.3.6** | 2026-04-13 | Patch | ElevationProfile Marker Crash Fix — maplibre-gl CJS/ESM Interop (Production) |
 | **0.3.5** | 2026-04-13 | Patch | ElevationProfile Marker Crash Fix — dynamischer Import mit try-catch |
 | **0.3.0** | 2026-04-13 | Major | Höhenprofil — interaktives SVG-Diagramm mit Steigungsfarben |

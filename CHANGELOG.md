@@ -10,6 +10,102 @@ Alle Änderungen sind chronologisch dokumentiert. Versionsnummern folgen [Semant
 
 ---
 
+## [0.6.0] — 2026-04-14
+
+### Major — Deep Audit & Fix: POI Maximization, AbortController, Transit Countries
+
+Tiefgehender Audit des gesamten Code-Stacks mit Fokus auf maximale Ladesäulen-Abdeckung für die Kroatien→Türkei Route. 31 Issues identifiziert, alle Critical + High + key Medium Issues gefixt.
+
+#### Critical Fixes
+- **C1: Center-Suche kaputt (lng→lon)**: POIPanel erstellte Center-Objekt mit `lng` statt `lon`. Alle POI-Suchen ohne Route (nur Kartenmitte) hatten `undefined` Longitude → Suche ergab 0 Ergebnisse.
+- **C2: Bulgarien Plovdiv falsche Koordinaten**: EVN Plovdiv Station hatte Sofia-Koordinaten (42.6975, 23.3260) statt Plovdiv (42.1354, 24.7453). Plovdiv-Ladesäule war in Wirklichkeit ein Duplikat von Sofia Centrum (350m Abstand).
+- **C3: Brand-Query Trunkation (120→360)**: Mit 24 Marken × 3 Filter × 6 Sample Points = 432 Filter, wurden bei Limit 120 türkische und serbische Marken abgeschnitten. Limit auf 360 erhöht — keine truncation mehr für 25 Sample Points.
+- **C4: Korridor-Sampling zu sparse für Langstrecke**: Bei 2000km Routen ergab `totalDist / 6` ein 333km Interval → nur 7 Sample Points → 0,7% Korridor-Abdeckung. Jetzt: dynamisch berechnet, max. 80km Interval → min. 25 Sample Points → volles Coverage.
+- **C5: AbortController für POI-Suche**: Doppelte Suchen überschrieben sich gegenseitig. Neue Suche bricht jetzt vorherige per `AbortController` ab.
+- **C6: AbortController für Routenberechnung**: Mehrfache "Berechnen"-Klicks erzeugten parallele BRouter-Requests. Alle außer dem letzten wurden ignoriert. Jetzt per `AbortSignal` abgebrochen.
+
+#### High Fixes
+- **H7: Overpass Result-Limit 500→2000**: Standard-Corridor-Queries truncierten bei 500 Elementen. Istanbul-Region hat hunderte Ladesäulen → viele fielen weg. Alle Queries jetzt auf 2000.
+- **H8: 3 neue Transit-Länder (22 Ladesäulen)**: Bosnien & Herzegowina (8), Montenegro (6), Nordmazedonien (8) hinzugefügt. Gesamt: 72 lokale Stationen in 7 Ländern — lückenlose Abdeckung Kroatien→Türkei.
+- **H9: Way-Suche nur bei kleinem Radius**: Enhanced Charging Query suchte Ways (große Polygone) auch bei 50km Korridor-Radius → Overpass Timeout. Jetzt nur bei ≤10km.
+- **H6: Dead Code entfernt**: Unbenutzter `generateId`-Import aus poi-aggregator.ts entfernt.
+
+#### Medium Fixes
+- **M4: Sightseeing-Tags erweitert**: `tourism=gallery`, `tourism=viewpoint`, `historic=castle/ruins/fort/archaeological_site` für Balkan-Region hinzugefügt.
+- **M5: Lokaler POI-Korridor-Filter verdoppelt**: Sampling von 100 auf 200 Punkte — bessere Coverage bei dichter Routengeometrie.
+- **Overpass Timeout erhöht**: Bis zu 180s für Enhanced Charging Query (vorher 90s) — langsame Queries auf 25+ Sample Points werden nicht mehr abgeschnitten.
+
+#### POI-System — Maximale Ladesäulen-Abdeckung
+Vor dem Audit:
+- 50 lokale Stationen in 4 Ländern
+- Korridor-Sampling: 333km bei 2000km → 0,7% Coverage
+- Brand-Limit: 120 (türkische Marken abgeschnitten)
+- Overpass-Limit: 500 (viele Ladesäulen invisible)
+- Kein Abort (stale Results)
+
+Nach dem Audit:
+- **72 lokale Stationen in 7 Ländern** (+44% Coverage)
+- **Korridor-Sampling: 80km max → min. 25 Points → 100% Coverage**
+- **Brand-Limit: 360** (alle Marken drin)
+- **Overpass-Limit: 2000** (keine Truncation)
+- **AbortController** auf POI + Routing
+
+#### New Files
+- `src/data/poi/bosnia-charging.ts` — 8 ELEN/JP EP/City Charge Stationen (Sarajevo, Zenica, Mostar, Banja Luka, Tuzla, Bijeljina)
+- `src/data/poi/montenegro-charging.ts` — 6 CGES/Greenway/ELEN Stationen (Podgorica, Nikšić, Budva, Kotor, Herceg Novi)
+- `src/data/poi/macedonia-charging.ts` — 8 EVN/MEPSO Stationen (Skopje, Bitola, Ohrid, Tetovo, Kumanovo, Štip)
+
+#### Geänderte Dateien
+- `src/lib/poi-aggregator.ts` — Sampling-Interval capped, Way-Guard, Brand-Limit 360, Overpass-Limit 2000, unused import removed
+- `src/lib/overpass.ts` — Sampling-Interval capped, Sightseeing-Tags erweitert, Overpass-Limit 2000
+- `src/lib/routing.ts` — AbortSignal-Parameter
+- `src/components/sidebar/POIPanel.tsx` — lng→lon Fix, AbortController für Suche
+- `src/components/sidebar/RoutePanel.tsx` — AbortController für Routing
+- `src/lib/poi-local.ts` — 3 neue Transit-Länder importiert + registriert
+- `src/data/poi/bulgaria-charging.ts` — Plovdiv Koordinaten korrigiert
+
+---
+
+## [0.5.1] — 2026-04-14
+
+### Patch — Code-Dedup, Parallel Queries, Graceful Degradation
+
+#### Architecture
+- **formatPOIDetails() extrahiert**: 150+ Zeilen POI-Formatierungs-Code aus MapView.tsx in separates Modul `src/lib/poiFormatter.ts` ausgelagert. MapView um 153 Zeilen reduziert.
+- **sampleRoute() dedupliziert**: War in `overpass.ts` und `poi-aggregator.ts` dupliziert → zentrale Funktion in `utils.ts`. Wird jetzt von beiden Modulen importiert.
+- **Version zentralisiert**: `next.config.ts` liest `VERSION`-Datei und injiziert `NEXT_PUBLIC_APP_VERSION` als Env-Variable. Alle Dateien nutzen `process.env.NEXT_PUBLIC_APP_VERSION` statt hartcodierte Fallbacks. `package.json` Version synchronisiert.
+
+#### POI Aggregator — Parallel Queries & Graceful Degradation
+- **Overpass Queries parallel statt seriell**: Einzelner riesiger Query gesplitet in 2 parallele Queries (Base + Brand/Operator) bei Ladesäulen-Suche. Verhindert Timeouts bei langen Routen (Kroatien→Türkei).
+- **Promise.allSettled statt Promise.all**: Wenn ein Overpass-Query fehlschlägt (Timeout, 500, leer), liefern die anderen trotzdem Ergebnisse. Graceful Degradation statt Totalausfall.
+- **Cross-Query Deduplication**: `seenIds` Set verhindert Dubletten wenn Base- und Brand-Query denselben OSM-Node zurückgeben.
+- **Smarter Route Sampling**: Bei langen Routen wird das Sampling-Interval dynamisch berechnet (Gesamtdistanz / 6), um max. ~6 Overpass-Around-Queries zu generieren. Verhindert Überlastung bei 2000km Routen.
+
+#### POI Deduplication — Lokale Daten Verbessert
+- **Erweiterter Radius für lokale Daten**: Wenn ein POI aus lokaler Quelle stammt (ungefähre Koordinaten), wird Dedup-Radius auf 200m statt 50m erweitert. Verhindert dass echte OSM-Dubletten nicht erkannt werden.
+- **Interne Marker aufgeräumt**: `_source_a`, `_source_b`, `_local_dataset` Marker werden vor dem Merge entfernt — kein Datenmüll in merged Tags.
+
+#### Security
+- **generateId() mit crypto.randomUUID()**: Nutzt jetzt `crypto.randomUUID()` statt `Date.now()-Math.random()`. Fallback auf `crypto.getRandomValues()` in non-secure Contexts.
+- **generateParticipantColor() mit crypto**: `Math.random()` für Farb-Auswahl ersetzt durch `crypto.getRandomValues()`.
+
+#### Geänderte Dateien
+- `src/lib/poiFormatter.ts` — NEU: formatPOIDetails() aus MapView ausgelagert
+- `src/lib/poi-aggregator.ts` — Parallel Queries, Promise.allSettled, Cross-Query Dedup, dynamisches Sampling
+- `src/lib/poi-dedup.ts` — 200m Radius für lokale Daten, Marker-Cleanup
+- `src/lib/overpass.ts` — sampleRoute() entfernt (jetzt in utils.ts)
+- `src/lib/utils.ts` — sampleRoute() zentral, generateId() mit crypto
+- `src/lib/session.ts` — generateParticipantColor() mit crypto
+- `src/lib/export.ts` — Version von Env-Variable
+- `src/lib/geocode.ts` — User-Agent Version von Env-Variable
+- `src/components/map/MapView.tsx` — formatPOIDetails importiert statt inline
+- `src/components/sidebar/Sidebar.tsx` — Version von Env-Variable
+- `next.config.ts` — VERSION-Datei als Env-Variable injiziert
+- `package.json` — Version 0.5.1
+- `VERSION` — 0.5.1
+
+---
+
 ## [0.5.0] — 2026-04-14
 
 ### Major — POI Aggregator: Multi-Source, Smart Dedup, Local Data

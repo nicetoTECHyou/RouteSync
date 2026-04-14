@@ -10,6 +10,41 @@ Alle Änderungen sind chronologisch dokumentiert. Versionsnummern folgen [Semant
 
 ---
 
+## [1.3.1] — 2026-04-15
+
+### Patch — POI Rendering Pipeline: StyleLoadCount-Fix, Self-Healing Source, Filter-Korrektur
+
+POIs wurden weiterhin nicht auf der Karte gerendert obwohl v1.3.0 die Architektur in 2 separate useEffects aufteilte. Auditing der vollen Rendering-Pipeline (Data Fetch → Array Processing → Map Layer Rendering) deckte drei zusätzliche Fehler auf, die collectively das visuelle Rendern verhinderten. Zusätzlich: Debug-Logging für zukünftige Diagnose.
+
+#### Critical Fixes
+- **P1: styleLoadCount fehlte in POI Data-Update useEffect**: Der POI Data-Update-Effect hatte `[pois, showPOIMarkers, canUserEdit]` als Dependencies. Nach JEDEM Style-Wechsel wurde `clearPOILayers()` aufgerufen (Source + Layer entfernt), und der Data-Update-Effect re-registrierte die `moveend`/`zoomend` Listener NICHT wieder. Resultat: Nach dem ersten Style-Wechsel wurden POIs nie mehr aktualisiert beim Pan/Zoom — die Karte zeigte einen statischen Snapshot.
+  - **Fix**: `styleLoadCount` zur Dependency-Array hinzugefügt. Nach jedem Style-Wechsel werden Listener neu registriert, Daten neu geladen, und Source neu befüllt.
+- **P2: POI-Source verschwindet ohne Recovery**: `updateClusters()` prüfte `map.getSource(CLUSTER_SOURCE_ID)` und returnete still wenn null. Kein Versuch den Source wiederherzustellen. Wenn durch Race-Conditions (Style-Load vs. React Batch-Update) der Source temporär fehlte, war kein Weg zurück — POIs verschwannen bis zum nächsten Style-Wechsel.
+  - **Fix**: Self-healing: Wenn Source fehlt, wird `addPOIClusterLayersToMap(map)` aufgerufen und der Source neu erstellt. Danach wird `setData()` normal fortgesetzt. Zusätzlich: Console-Error wenn Self-Healing fehlschlägt.
+- **P3: `['all', ['==', ['get', 'cluster'], false]]` Filter**: POI Individual-Layer nutzten `['all', singleCondition]` als Filter-Wrapper. MapLibre GL verarbeitet dies korrekt, aber der unnötige Wrapper kann bei Style-Validation Warnungen in zukünftigen MapLibre-Versionen führen.
+  - **Fix**: Filter auf `['==', ['get', 'cluster'], false]` vereinfacht (Circle + Symbol Layer). Identisches Verhalten, sauberer Code.
+- **P4: CLUSTER_TOOLTIP_LAYER_ID exportiert aber nie definiert**: Die Konstante `CLUSTER_TOOLTIP_LAYER_ID` wurde in POI_LAYER_IDS referenziert, aber als separate Konstante nie definiert. Der Export referenzierte eine nicht-existierende Variable. Bei Tree-Shaking konnte dies zu Build-Warnungen führen.
+  - **Fix**: `CLUSTER_TOOLTIP_LAYER_ID` komplett entfernt. War ein Überrest aus einer vorherigen Architektur-Version (Tooltip wurde später via DOM-Popup realisiert).
+
+#### Debug Logging
+- **POI Data Update**: `console.log` mit POI-Anzahl, readyRef-Status, showPOIMarkers bei jedem Effect-Run.
+- **updateClusters()**: Loggt Zoom-Level, Bounding-Box, Cluster-Anzahl, Feature-Anzahl vor `setData()`.
+- **setData Success**: Bestätigungs-Log nach erfolgreichem `source.setData(geojson)`.
+- **Source Recovery**: `console.warn` wenn Source fehlt und Self-Healing greift. `console.error` wenn Self-Healing fehlschlägt.
+
+#### Geänderte Dateien
+- `src/components/map/MapView.tsx` — styleLoadCount Dep, Self-Healing Source, Debug-Logging
+- `src/lib/poi-cluster.ts` — Filter-Vereinfachung, orphan CLUSTER_TOOLTIP_LAYER_ID entfernt
+- `VERSION` — 1.3.1
+- `package.json` — 1.3.1
+- `src/components/sidebar/Sidebar.tsx` — 1.3.1
+- `src/components/dashboard/HeaderBar.tsx` — 1.3.1
+- `src/lib/export.ts` — 1.3.1
+- `src/lib/geocode.ts` — 1.3.1
+- `CHANGELOG.md` — v1.3.1 Eintrag
+
+---
+
 ## [1.3.0] — 2026-04-15
 
 ### Major — POI Rendering Fix: Anti-Lag Clustering, Layer-Data Separation, High-Zoom Cluster-Expand

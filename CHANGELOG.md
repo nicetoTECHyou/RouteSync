@@ -10,6 +10,32 @@ Alle Änderungen sind chronologisch dokumentiert. Versionsnummern folgen [Semant
 
 ---
 
+## [0.5.9] — 2026-04-14
+
+### Critical — POI Coverage Fix: BBox Queries + Turkish Station Expansion
+
+POI-Suche fand zu wenige Ladesäulen, besonders in der Türkei. 200km Strecke ohne einzige Ladesäule — obwohl Trugo/ZES hunderte Stationen betreiben. Ursache: Point-Sampling bei 50-80km Abstand deckte nur ~6% des Korridors ab. BBox-Queries garantieren jetzt 100% Abdeckung.
+
+#### Critical Fixes
+- **P1: Korridor-Sampling deckte nur 6%**: Bei 200km Strecke mit 50-80km Sampling-Intervall landeten nur 2-3 `around:` Kreise auf der Route. Die Lücken zwischen den Kreisen wurden komplett ignoriert — eine Ladesäule 40km vom nächsten Sample-Punkt wurde nicht gefunden.
+  - **Fix**: Alle POI-Queries (Charging, Brands, General) nutzen jetzt Bounding Box (`south,west,north,east`) statt Point-Sampling. Die BBox umschließt die gesamte Route mit Korridor-Padding — 100% Abdeckung, 0% Lücken.
+- **P2: Brand-Queries mit case-sensitiven Tags**: Overpass `brand="Trugo"` findet `brand="trugo"` oder `brand="TRUGO"` NICHT. Türkische OSM-Mapper nutzen inkonsistente Groß-/Kleinschreibung.
+  - **Fix**: Brand-Queries nutzen jetzt `~"Trugo",i` (case-insensitive Regex). Findet alle Varianten unabhängig von Schreibweise.
+- **P3: Türkische lokale Daten zu dünn**: Nur 20 Stationen in 6 Großstädten. Dazwischen (D100 Istanbul→Ankara, D400 Izmir→Antalya) gab es keine lokalen Backup-Stationen.
+  - **Fix**: 35 neue Stationen auf allen wichtigen Autobahnkorridoren (D100, D400, D200, D300, D330, D650, D010). Gesamt: 55 türkische Stationen in 30+ Städten.
+
+#### Geänderte Dateien
+- `src/lib/poi-aggregator.ts` — BBox statt Point-Sampling für Base-Charging + Brand-Queries, Case-Insensitive Regex, computeRouteBbox() Helper
+- `src/lib/overpass.ts` — BBox statt Point-Sampling für buildCorridorPOIQuery (alle Kategorien)
+- `src/data/poi/turkey-charging.ts` — 35 neue Stationen (+175%): D100, D400, D200, D300, D330, D650, D010, Schwarzmeer, Südostanatolien
+- `VERSION` — 0.5.9
+- `package.json` — 0.5.9
+- `src/components/sidebar/Sidebar.tsx` — 0.5.9
+- `src/lib/export.ts` — 0.5.9
+- `src/lib/geocode.ts` — 0.5.9
+
+---
+
 ## [0.5.8] — 2026-04-14
 
 ### Critical — Elevation 429 Fix (Final), Overpass Parallel Failover, CTO Audit

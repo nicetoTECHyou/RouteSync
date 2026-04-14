@@ -10,6 +10,33 @@ Alle Änderungen sind chronologisch dokumentiert. Versionsnummern folgen [Semant
 
 ---
 
+## [1.2.2] — 2026-04-15
+
+### Patch — Dreistufige POI-Suchpriorität: Standort > Route > Center
+
+POI-Suche ignorierte den manuellen Standort (Virtual GPS) vollständig. Wenn ein Standort per Rechtsklick gesetzt war, wurde trotzdem entlang der Route oder um die Kartenmitte gesucht. Die Such-Logik in allen drei Aufrufern (POIPanel, HeaderBar Quick-Action, MapView Rechtsklick) hat jetzt eine einheitliche 3-stufige Priorität. Zusätzlich zeigt die POIPanel-UI den aktiven Suchmodus als farbcodierten Indikator an.
+
+#### Critical Fixes
+- **P1: POI-Suche ignorierte virtualLocation**: `POIPanel.handleSearchPOIs()` prüfte nur `hasRoute` → `geometry` oder Fallback `mapCenter`. Wenn ein `virtualLocation` im `useMapStore` gesetzt war (per Rechtsklick "Standort hier setzen"), wurde dieser komplett ignoriert. POIs wurden immer entlang der Route oder um die Kartenmitte gesucht — nie um den manuellen Standort.
+  - **Fix**: 3-stufige Priorität in `handleSearchPOIs()`: (1) `virtualLocation` gesetzt → `center = virtualLocation` (Radius-Suche), (2) Route existiert → `geometry = route.geometry` (Korridor-Suche), (3) Weder noch → `center = mapCenter` (Center-Suche). `useMapStore` Import hinzugefügt.
+- **P2: HeaderBar Quick-Action "Laden!" ignorierte virtualLocation**: Der Typ 2 Ladepunkte-Quick-Button nutzte immer `map.getCenter()` als Suchursprung, auch wenn ein manueller Standort gesetzt war.
+  - **Fix**: `handleChargingSearch()` prüft jetzt `useMapStore.getState().virtualLocation` und verwendet diesen als Suchzentrum wenn vorhanden. Fallback auf `map.getCenter()`.
+- **P3: POIPanel UI zeigte nur Route-Indikator**: Der blaue/grüne Suchmodus-Banner erschien nur bei aktiver Route ("Route-Korridor-Suche aktiv"). Kein Indikator für Standort-Suche oder Center-Suche.
+  - **Fix**: Neuer `searchMode` State (`virtual | corridor | center`) basierend auf `virtualLocation` und `hasRoute`. Drei farbcodierte Indikatoren: Blau (Standort), Grün (Korridor), kein Banner (Center). Radius-Selektor und Result-Zähler an `searchMode` statt `hasRoute` gebunden.
+
+#### Geänderte Dateien
+- `src/components/sidebar/POIPanel.tsx` — 3-stufige Priorität, searchMode State, UI-Indikatoren
+- `src/components/dashboard/HeaderBar.tsx` — virtualLocation in Quick-Action, v1.2.2
+- `VERSION` — 1.2.2
+- `package.json` — 1.2.2
+- `src/components/sidebar/Sidebar.tsx` — 1.2.2
+- `src/lib/export.ts` — 1.2.2
+- `src/lib/geocode.ts` — 1.2.2
+- `README.md` — v1.2.2 Badge, Versionshistorie
+- `CHANGELOG.md` — v1.2.2 Eintrag
+
+---
+
 ## [1.2.1] — 2026-04-15
 
 ### Patch — MapLibre Paint Property CSS-Var Fix

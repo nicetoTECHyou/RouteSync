@@ -10,6 +10,28 @@ Alle Änderungen sind chronologisch dokumentiert. Versionsnummern folgen [Semant
 
 ---
 
+## [0.6.3] — 2026-04-14
+
+### Patch — Overpass Queue v3: Delays, Timeout, Endpoint Health
+
+#### Critical Fixes
+- **O3: 5s Delay zwischen Queries war definiert aber nie aufgerufen**: `QUERY_DELAY_MS = 5000` existierte im Code, aber `processQueue()` hatte kein `await sleep()` — Queries wurden sofort nacheinander gefeuert ohne Pause.
+  - **Fix**: `processQueue()` hat jetzt `await sleep(QUERY_DELAY_MS)` zwischen Queries (erste Query ohne Delay).
+- **O4: 30s Client-Timeout killt Queries die der Server noch bearbeitet**: Overpass Server-Timeout ist 45s, aber `AbortController` brach nach 30s ab. Query 1 schaffte es (kumi.systems), Query 2-5 timed aus weil der Server noch rechnete.
+  - **Fix**: `TIMEOUT_MS` von 30s auf **60s** erhöht (45s Server + 15s Netzwerk-Puffer).
+- **O5: Tote Endpoints werden endlos retryt**: `overpass.openstreetmap.ru` (immer `ERR_CONNECTION_TIMED_OUT`) und `overpass-api.de` (504) wurden bei JEDEM Retry wieder probiert. Bei Query 2-5 wurden jeweils 4 Endpoints × 3 Retries = 12 Versuche pro Query verschwendet.
+  - **Fix**: Endpoint Health Tracking — jeder Endpoint hat `failCount`. Nach 2+ aufeinanderfolgenden Fehlern → 2min Cooldown (wird komplett übersprungen). Bei Erfolg → Reset. `overpass.ru` landet nach erstem Fail sofort in Cooldown.
+
+#### Geänderte Dateien
+- `src/lib/overpass.ts` — Queue v3: Inter-Query Delay aktiviert, 60s Timeout, Endpoint Health Tracking
+- `VERSION` — 0.6.3
+- `package.json` — 0.6.3
+- `src/components/sidebar/Sidebar.tsx` — 0.6.3
+- `src/lib/export.ts` — 0.6.3
+- `src/lib/geocode.ts` — 0.6.3
+
+---
+
 ## [0.6.2] — 2026-04-14
 
 ### Patch — README auf aktuellen Stand gebracht

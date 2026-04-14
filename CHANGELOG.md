@@ -10,6 +10,34 @@ Alle Änderungen sind chronologisch dokumentiert. Versionsnummern folgen [Semant
 
 ---
 
+## [0.8.1] — 2026-04-15
+
+### Patch — Center-Query Tile-Cache-Integration, Center-Radius-Filter, Brand-Regex-Konsolidierung, Result-Limit
+
+Center-Queries (POI-Suche ohne Route, nur Kartenmitte) ignorierten den Tile-Cache komplett und trafen immer live auf Overpass. Bei jeder Kartenbewegung wurde eine neue Overpass-Query abgefeuert — ohne Debounce, ohne Dedup, ohne Cache. In dicht besiedelten Gebieten (Großstädte) returnierte eine einzige Query über 1000 POIs (1471 Elemente → 1102 POIs), was zu massiven 429-Rate-Limits und 30s Cooldowns führte. Vier kritische Fixes identifiziert und behoben.
+
+#### Critical Fixes
+- **C1: Center-Queries ignorierten Tile-Cache komplett**: `searchPOIsAggregated()` nutzte den Tile-Cache (Phase 0) nur für Routen-Suchen (`hasRoute && geometry`). Center-Suchen (`center && !hasRoute`) übersprangen Phase 0 und gingen direkt zu Overpass — bei jeder Suche, auch wenn die Tiles bereits gecacht waren. Ergebnisse: "0 tile-cache" in den Logs, every time a fresh Overpass hit.
+  - **Fix**: Center-Queries generieren jetzt Tile-IDs aus `[[center.lon, center.lat]]` mit `centerRadius` als Padding. Tile-Cache wird als Phase 0 geprüft — identisch zum Route-Flow. Wenn alle Center-Tiles gecacht sind, wird Overpass komplett übersprungen.
+- **C2: Kein Center-Radius-Filter für Tile-Cache POIs**: Tile-Cache enthält POIs aus dem gesamten 1°×1° Tile (bis zu ~110km Kantenlänge). Bei einer Center-Suche mit 10km Radius wurden alle POIs im gesamten Tile angezeigt — auch die 100km entfernten. Kein Filter entfernte die POIs jenseits des gewählten Suchradius.
+  - **Fix**: Nach dem Laden der Tile-Cache POIs wird ein Distance-Filter angewendet: `poi.distance <= centerRadius`. POIs jenseits des Suchradius werden entfernt. Log: "Center radius filter: removed N POIs beyond Xkm".
+- **C3: Brand-Queries erzeugten 60 separate Overpass-Filter**: `buildEnhancedChargingCenterQuery()` hatte 30 Marken × 2 Filter (brand + operator) = 60 einzelne `around:`-Filterzeilen. Bei jedem Center-Query mit Lade-Säulen-Kategorie wurde eine gigantische Overpass-Query mit 60+ Filtern generiert — langsam, fehleranfällig, und oft über dem Overpass-Speicherlimit.
+  - **Fix**: Alle 30+ Marken in einen einzelnen Regex-Filter konsolidiert: `brand~"ELEN|Ionity|Tesla|Trugo|...",i`. Zwei Zeilen statt 60 (eine für brand, eine für operator). Gleiche Coverage, 1 Query, schnelleres Parsing, weniger Overpass-Load.
+- **C4: Kein Result-Limit bei großen Suchradien**: Bei 100km Suchradius um ein Stadtzentrum konnten Overpass-Queries Tausende von Elementen zurückgeben (1471 beobachtet → 1102 nach Dedup). Diese Flut an POIs überlastete die UI, den Dedup-Algorithmus und die IndexedDB-Caching-Phase.
+  - **Fix**: Dynamisches Output-Limit: `radius > 50km → 500`, sonst `2000`. Zusätzlich: Way-Suche (große Polygone) nur bei Radius ≤25km (vorher ≤25km für Enhanced Charging Query beibehalten, aber mit höherem Timeout für große Radii: 45s statt 25s).
+
+#### Geänderte Dateien
+- `src/lib/poi-aggregator.ts` — Tile-Cache für Center-Queries, Center-Radius-Filter, Result-Limit
+- `VERSION` — 0.8.1
+- `package.json` — 0.8.1
+- `src/components/sidebar/Sidebar.tsx` — 0.8.1
+- `src/lib/export.ts` — 0.8.1
+- `src/lib/geocode.ts` — 0.8.1
+- `README.md` — v0.8.1 Badge, Versionshistorie
+- `CHANGELOG.md` — v0.8.1 Eintrag
+
+---
+
 ## [0.8.0] — 2026-04-15
 
 ### Major — Tile-basierter POI-Cache: IndexedDB, 7-Tage-TTL, Instant Reload

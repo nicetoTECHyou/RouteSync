@@ -6,7 +6,7 @@
 
 **Gemeinsam Routen planen — POIs entdecken — 1:1 Export**
 
-**RouteSync v0.8.0**
+**RouteSync v0.8.1**
 
 <br>
 
@@ -15,7 +15,7 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 [![MapLibre](https://img.shields.io/badge/MapLibre_GL-5.22-1AAC71?logo=maplibre&logoColor=white)](https://maplibre.org)
 [![Zustand](https://img.shields.io/badge/Zustand-5-764ABC)](https://github.com/pmndrs/zustand)
-[![Version](https://img.shields.io/badge/Version-0.8.0-10B981)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-0.8.1-10B981)](./CHANGELOG.md)
 
 <br>
 
@@ -285,6 +285,7 @@ Alle Änderungen sind detailliert in der [CHANGELOG.md](./CHANGELOG.md) dokument
 
 | Version | Datum | Typ | Beschreibung |
 |---------|-------|-----|-------------|
+| **0.8.1** | 2026-04-15 | Patch | Center-Query Tile-Cache-Integration, Center-Radius-Filter, Brand-Regex-konsolidierung, Result-Limit |
 | **0.8.0** | 2026-04-15 | Major | Tile-basierter POI-Cache (IndexedDB, 7d TTL), Instant Reload für gecachte Routen |
 | **0.7.2** | 2026-04-14 | Minor | Höhenprofil 500km Fix, Live-Autocomplete, Ladesäulen-Expansion (TR/Balkan), Batch-Fehlerresilienz |
 | **0.7.1** | 2026-04-14 | Patch | Korridor-Filter, Brand-Integration in Sektoren, overpass.ru entfernt, Category-Fix |

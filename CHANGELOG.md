@@ -10,6 +10,31 @@ Alle Änderungen sind chronologisch dokumentiert. Versionsnummern folgen [Semant
 
 ---
 
+## [1.3.2] — 2026-04-15
+
+### Patch — Elevation-Profile Fix & POI Layer-Self-Healing
+
+Höhendaten zeigten dauerhaft "Laden" statt das Diagramm anzuzeigen. POIs wurden weiterhin nicht auf der Karte gerendert trotz v1.3.0/v1.3.1 Fixes. Zwei unabhängige Root-Cause Bugs in der Rendering-Pipeline.
+
+#### Critical Fixes
+- **P1: attemptedKeyRef nicht in Cleanup zurückgesetzt (ElevationProfile.tsx)**: Der Debounce-Ref `attemptedKeyRef` wurde im useEffect-Cleanup NICHT zurückgesetzt. Wenn die Route-Geometry sich änderte (neue Array-Referenz, gleiche Daten — z.B. nach Alt-Routen-Berechnung), wurde der Cleanup ausgeführt (Timer gecanceld, Fetch aborted), aber `attemptedKeyRef.current` behielt den alten Key. Der nächste Effect-Run prüfte `attemptedKeyRef.current === fetchKey` → TRUE → Fetch komplett übersprungen. Resultat: `profile` blieb leer → "Laden" für immer.
+  - **Fix**: `attemptedKeyRef.current = ''` im Cleanup-Return. Nach jedem Abort/Geometry-Change startet der Fetch neu.
+- **P2: addPOIClusterLayersToMap checkt nur Source nicht Layer (poi-cluster.ts)**: Die Funktion prüfte nur `if (map.getSource(CLUSTER_SOURCE_ID)) return;`. Wenn durch eine Race-Condition (Style-Load vs. React Batch-Update) der GeoJSON-Source existierte aber die 4 Layer fehlten, gab die Funktion frühzeitig zurück — ohne die Layer neu zu erstellen. POIs waren in der Pipeline aber unsichtbar auf der Karte.
+  - **Fix**: Prüft jetzt sowohl Source ALS AUCH kritischen Layer (`CLUSTER_CIRCLE_ID`). Bei partiellern Zustand: Source wird entfernt, dann komplett neu aufgebaut. Zusätzlich: alle 4 `map.addLayer()` Aufrufe mit try/catch wrapped — wenn ein Layer fehlschlägt, werden die restlichen trotzdem hinzugefügt statt komplett abzubrechen. Console-Error Logging für fehlgeschlagene Layer.
+
+#### Geänderte Dateien
+- `src/components/map/ElevationProfile.tsx` — attemptedKeyRef Cleanup-Fix
+- `src/lib/poi-cluster.ts` — Source+Layer Check, try/catch, Partial-State-Recovery
+- `VERSION` — 1.3.2
+- `package.json` — 1.3.2
+- `src/components/sidebar/Sidebar.tsx` — 1.3.2
+- `src/components/dashboard/HeaderBar.tsx` — 1.3.2
+- `src/lib/export.ts` — 1.3.2
+- `src/lib/geocode.ts` — 1.3.2
+- `CHANGELOG.md` — v1.3.2 Eintrag
+
+---
+
 ## [1.3.1] — 2026-04-15
 
 ### Patch — POI Rendering Pipeline: StyleLoadCount-Fix, Self-Healing Source, Filter-Korrektur

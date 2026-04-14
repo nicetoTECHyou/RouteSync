@@ -10,6 +10,68 @@ Alle Änderungen sind chronologisch dokumentiert. Versionsnummern folgen [Semant
 
 ---
 
+## [1.0.0] — 2026-04-15
+
+### Major — "The Lastenrad Cockpit": Power-Leiste, Anti-Redundanz, Tooltips, Expert Features
+
+Professionelles Lastenrad-Cockpit: Alle Redundanzen eliminiert, Header zur Lastenrad-Power-Leiste umgebaut, Tooltips für jedes interaktive Element, Expert-Features implementiert. Das Dashboard zeigt jetzt nur was der Lastenrad-Fahrer braucht — keine doppelten Steuerelemente, keine überflüssigen Kategorien im Header. Die obere Leiste ist ausschließlich für Fahrrad-Logistik-Filter reserviert.
+
+#### Anti-Redundancy — Radikale Entschlackung
+- **POI-Category-Chips aus Header ENTFERNT**: Restaurant, Café, Krankenhaus etc. waren doppelt — im Header UND in der rechten Sidebar (POIPanel). POI-Kategorien sind jetzt NUR in der rechten Sidebar. Header ist frei für Lastenrad-Filter.
+- **Kartenstil-Switcher aus Header ENTFERNT**: 5 Emoji-Buttons (🗺️🌙🛰️⛰️🌄) waren doppelt — im Header UND auf der Karte (MapControls). Kartenstil-Umschaltung ist jetzt NUR als kompaktes Icon-Menü direkt auf der Karte (MapControls unten links).
+- **avoidBarriers-Checkbox aus RoutePanel ENTFERNT**: War redundant mit dem neuen Header-Filter. Barriere-Check ist jetzt als Filter-Toggle in der Power-Leiste.
+- **Logische Trennung**: Header = Lastenrad-Logistik, Rechte Sidebar = POI-Kategorien, Karte = Kartenstil/Layer.
+
+#### New Feature: Lastenrad Power-Leiste (Header)
+- **4 Toggle-Buttons** mit detaillierten Tooltips:
+  - ⛔ **Barrieren**: Filtert Wege < 100m Breite oder physische Hindernisse (Umlaufperren, Poller). Aktiviert automatisch Sicherheitsprofil.
+  - 🛣️ **Autobahnen**: Vermeidet motorisierte Schnellstraßen für sichere Fahrradrouten.
+  - 🪨 **Schotter**: Priorisiert Asphalt. Schotter, Sand, unbefestigt werden gemieden (kritisch für 200kg Lastenrad).
+  - ⚡ **Ladesäulen**: Zeigt nur ebenerdige/breite Säulen an (mind. 1m Zugang).
+- **Visuelles Feedback**: Aktive Filter leuchten mit Farbhintergrund + pulsierendem Punkt + Schatten-Glow.
+- **Filter-Counter**: Badge zeigt "N Filter" wenn Filter aktiv.
+- **Detaillierte Tooltips**: Jeder Filter hat zwei Tooltip-Varianten — Inaktiv (Erklärung) und Aktiv (Status + Auswirkung).
+
+#### New Feature: Quick-Action-Panel (Header)
+- **⚡ "Laden!" Notfall-Button**: Roter Emergency-Button in der Power-Leiste. Sucht sofort Ladesäulen im 15km-Umkreis der Kartenmitte, sortiert nach Distanz, flyt zur nächsten Station. Kein Seitentwechsel, kein Menü — ein Klick reicht.
+
+#### New Feature: Tooltips für jedes interaktive Element
+- **MapControls**: Alle Buttons (Zoom, Kompass, 3D, Layer, Kartenstil) haben jetzt Tooltips mit präziser Beschreibung. Map-Stile zeigen zusätzlich Untertitel (z.B. "Topografische Karte mit Höhenlinien").
+- **RoutePanel**: Profil-Selector und Berechnen-Button haben Tooltips. Profil gesperrt wenn Barriere-Filter aktiv.
+- **Header**: Session-Code, Teilnehmer, Verbindungsstatus, Settings — alles mit Tooltips.
+- **Layer-Toggles**: Jeder Layer-Toggle zeigt "Titel (aktiv)" oder "Titel + Beschreibung" im Tooltip.
+
+#### New Feature: Elevation-Highlight (>10% Steigung)
+- **Rote Markierung**: Im Höhenprofil werden Abschnitte mit >10% Steigung/Gefälle mit rotem Hintergrundband und Prozentanzeige markiert (▲12% / ▼15%).
+- **Lastenrad-kritisch**: Ab 10% Steigung mit 200kg Gesamtgewicht → unmenschlich. Visuelle Warnung direkt im Profil.
+
+#### New Feature: Smart Info-Card (POI-Popups)
+- **"Zugänglich für 1m Breite?"**: Jeder POI-Popup zeigt sofort eine farbcodierte Info-Card:
+  - ✅ **JA** (grün) — `_cargo_access=yes`
+  - ⛔ **NEIN** (rot) — `_cargo_access=no`
+  - ⚠️ **UNBEKANNT** (gelb) — kein Tag vorhanden
+- Kein Extra-Klick nötig — sofort sichtbar beim Öffnen des Popups.
+
+#### Store Changes
+- **useMapStore**: 3 neue States: `avoidHighways`, `avoidGravel`, `onlyAccessibleCharging` + Setter.
+- Barriere-Filter aus RoutePanel-Checkbox → Header-Toggle (Zustand bleibt in useMapStore).
+
+#### Geänderte Dateien
+- `src/components/dashboard/HeaderBar.tsx` — Komplett-Rewrite: Lastenrad Power-Leiste + Quick-Action + Tooltips
+- `src/store/useMapStore.ts` — 3 neue Filter-States
+- `src/components/sidebar/RoutePanel.tsx` — avoidBarriers-Checkbox entfernt, Tooltips hinzugefügt, Barriere-Info-Badge
+- `src/components/map/MapControls.tsx` — Komplett-Rewrite: Tooltips für alle Buttons + Kartenstil-Beschreibungen
+- `src/components/map/ElevationProfile.tsx` — >10% Steigungs-Markierung (rot + Prozent)
+- `src/components/map/MapView.tsx` — Smart Info-Card in POI-Popups (1m Zugänglichkeit)
+- `VERSION` — 1.0.0
+- `package.json` — 1.0.0
+- `src/components/sidebar/Sidebar.tsx` — 1.0.0
+- `src/lib/export.ts` — 1.0.0
+- `src/lib/geocode.ts` — 1.0.0
+- `CHANGELOG.md` — v1.0.0 Eintrag
+
+---
+
 ## [0.9.0] — 2026-04-15
 
 ### Major — "The Productivity Layout": Dashboard-Architektur, Kontext-Aktionen, Dynamic Summary

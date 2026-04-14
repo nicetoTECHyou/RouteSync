@@ -10,6 +10,27 @@ Alle Änderungen sind chronologisch dokumentiert. Versionsnummern folgen [Semant
 
 ---
 
+## [0.6.1] — 2026-04-14
+
+### Patch — Overpass Rate-Limit Fix: FIFO Queue ersetzt Parallel Burst
+
+#### Critical Fixes
+- **O1: 24 parallele Overpass-Requests verursachten 429 Storm**: `Promise.allSettled` feuerte bis zu 6 Queries gleichzeitig, jeder mit `Promise.race()` gegen alle 4 Endpunkte = 24 gleichzeitige HTTP-Requests. Overpass-API (Limit: ~2 req/min pro Instanz) antwortete sofort mit 429. Sequential-Fallback kaskadierte durch ALLE Endpunkte und erzeugte weitere Requests.
+  - **Fix**: Komplett-Neu: FIFO Queue (modelliert nach `elevation.ts` v2 Pattern). Alle `fetchOverpass()` Aufrufe werden streng sequenziell abgearbeitet. 5s Delay zwischen Queries. Endpoint-Rotation verteilt Load gleichmäßig auf alle 4 Endpunkte. 429-Erkennung mit globalem 30s Cooldown + exponentiellem Backoff (8s → 16s). Max 3 Retries pro Query. 30s Timeout pro Request.
+- **O2: poi-aggregator parallel dispatch**: `Promise.allSettled(queries.map(...))` startete alle Queries parallel statt sequenziell.
+  - **Fix**: Sequenzielle `for`-Schleife ersetzt `Promise.allSettled`. Graceful Degradation bleibt erhalten.
+
+#### Geänderte Dateien
+- `src/lib/overpass.ts` — Komplett-Rewrite: FIFO Queue, 429-Erkennung, Endpoint-Rotation
+- `src/lib/poi-aggregator.ts` — Promise.allSettled → sequenzielle For-Schleife
+- `VERSION` — 0.6.1
+- `package.json` — 0.6.1
+- `src/components/sidebar/Sidebar.tsx` — 0.6.1
+- `src/lib/export.ts` — 0.6.1
+- `src/lib/geocode.ts` — 0.6.1
+
+---
+
 ## [0.6.0] — 2026-04-14
 
 ### Major — Cargo Bike (Lastenrad) Routing: Barriere-Check, Oberflächen-Analyse, Steigungs-Sicherheit, Griechenland-Expansion

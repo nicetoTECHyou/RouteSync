@@ -10,7 +10,49 @@ Alle Änderungen sind chronologisch dokumentiert. Versionsnummern folgen [Semant
 
 ---
 
-## [0.7.1] — 2026-04-14
+## [0.8.0] — 2026-04-15
+
+### Major — Tile-basierter POI-Cache: IndexedDB, 7-Tage-TTL, Instant Reload
+
+Das POI-System speichert Overpass-Ergebnisse jetzt automatisch in einem 1°×1° Tile-Cache (IndexedDB). Bei wiederholten Suchen auf der gleichen oder ähnlichen Route werden POIs sofort aus dem Cache geladen — ohne Overpass-Query, ohne 10s Delay, ohne 429 Risk. Die Zielvorgabe: **<1s für 500km gecachte Route** (vs. 60-120s mit Live-Overpass).
+
+#### New Features
+- **1°×1° Tile-Cache (IndexedDB)**: Die Welt ist in Grad-Raster aufgeteilt. Nach jeder Overpass-Suche werden die Ergebnisse automatisch in ihre jeweiligen Tiles gespeichert. IndexedDB persistiert den Cache über Browser-Sessions hinweg — kein Datenverlust bei Page-Reload.
+- **7-Tage TTL pro Tile**: Cached Tiles verfallen nach 7 Tagen und werden bei der nächsten Suche automatisch durch frische Overpass-Daten ersetzt. Garantiert aktuelle Daten ohne manuelle Cache-Verwaltung.
+- **Intelligentes Tile-Merging**: Wenn ein Tile bereits Daten enthält (z.B. von einer vorherigen Suche mit anderen Kategorien), werden neue Overpass-Ergebnisse merged — keine Daten gehen verloren. Max 5000 Elemente pro Tile verhindern Speicher-Bloat.
+- **Cache-First Architektur**: Bei jeder POI-Suche wird zuerst der Tile-Cache geprüft. Wenn ALLE Route-Tiles gecacht sind, wird Overpass komplett übersprungen (<1s Gesamtdauer). Bei teil-gecachten Routen werden nur die fehlenden Tiles per Overpass abgefragt.
+- **Tile-Cache Stats in UI**: Die Stats-Bar zeigt jetzt violett "Cache: X" für gecachte POIs und "X/Y Tiles" für Cache-Hit-Rate. OSM/Lokal/Merge-Stats bleiben wie gewohnt.
+- **Tile-Generator Skript**: `scripts/generate-poi-tiles.ts` ermöglicht die Vorgenerierung von statischen Tile-Dateien für beliebige Regionen. Optional — der Cache funktioniert auch ohne statische Tiles.
+
+#### Architecture
+- **`src/lib/poi-tiles.ts`** (NEU): Komplettes Tile-Cache-System mit IndexedDB. Enthält: `getIntersectingTileIds()` (Route→Tiles), `loadCachedPOIs()` (Batch-Read aus IndexedDB), `cacheOverpassResults()` (Write+Merge), `clearTileCache()`, `getCachedTileCount()`. SSR-sicher (IndexedDB nur im Browser).
+- **`src/lib/poi-aggregator.ts` v3**: Tile-Cache als "Phase 0" vor Overpass-Queries. Neuer Statistik-Typ mit `tileCache`, `tileCacheHits`, `tileCacheMisses`. Alle Overpass-Elemente werden nach der Suche in Tiles gecacht.
+- **`src/components/sidebar/POIPanel.tsx`**: Stats-Bar erweitert mit Cache-Badge (violett) und Tile-Hit-Rate.
+
+#### Performance-Vergleich
+
+| Szenario | v0.7.2 (Sektoren) | v0.8.0 (Tile-Cache) |
+|---|---|---|
+| Erste Suche, 500km | 60-120s (10-20 Overpass) | 60-120s (gleich, + Caching) |
+| Wiederholte Suche, gleiche Route | 60-120s (erneut Overpass) | **<1s** (IndexedDB) |
+| Wiederholte Suche, ähnliche Route | 60-120s (komplett neu) | **<30s** (nur neue Tiles) |
+| 429 Rate-Limit | 30s Cooldown | **Kein Problem** (Cache) |
+| Offline (gecacht) | 0 POIs | **Vollständig** (aus Cache) |
+
+#### Geänderte Dateien
+- `src/lib/poi-tiles.ts` — NEU: Tile-Cache System (IndexedDB, 7d TTL, Merge)
+- `src/lib/poi-aggregator.ts` — v3: Tile-Cache Phase 0, Auto-Caching, erweiterte Stats
+- `src/components/sidebar/POIPanel.tsx` — Cache-Badge, Tile-Hit-Rate in Stats-Bar
+- `scripts/generate-poi-tiles.ts` — NEU: Tile-Vorgenerator für statische Assets
+- `VERSION` — 0.8.0
+- `package.json` — 0.8.0
+- `src/components/sidebar/Sidebar.tsx` — 0.8.0
+- `src/lib/export.ts` — 0.8.0
+- `src/lib/geocode.ts` — 0.8.0
+
+---
+
+## [0.7.2] — 2026-04-14
 
 ### Patch — Korridor-Filter, Brand-Integration, overpass.ru entfernt, Category-Detection Fix
 

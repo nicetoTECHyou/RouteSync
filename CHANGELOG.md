@@ -10,6 +10,29 @@ Alle Änderungen sind chronologisch dokumentiert. Versionsnummern folgen [Semant
 
 ---
 
+## [1.2.1] — 2026-04-15
+
+### Patch — MapLibre Paint Property CSS-Var Fix
+
+POI-Cluster-Layer `poi-individual-symbol` verwendete `var(--color-popover-foreground, #1a1a1a)` als `text-color` Paint-Property. MapLibre GL unterstützt keine CSS Custom Properties in Layer-Paint — nur statische Farbwerte (Hex, RGBA) oder MapLibre-Ausdrücke. Ergebnis: Fataler Style-Validation-Error beim Karten-Laden, POI-Label wurden nicht gerendert.
+
+#### Critical Fixes
+- **M1: CSS Variable in MapLibre Paint-Property**: `poi-cluster.ts` Zeile 310 nutzte `'text-color': 'var(--color-popover-foreground, #1a1a1a)'`. MapLibre throwed `color expected, "var(...)" found` bei `addLayer()`. Alle POI-Namens-Labels auf der Karte fielen aus.
+  - **Fix**: Ersetzt durch `'text-color': '#1a1a1a'` — statischer Hex-Wert. Weißer Halo (`text-halo-color: rgba(255,255,255,0.9)`) garantiert Lesbarkeit auf allen Kartenstilen.
+
+#### Geänderte Dateien
+- `src/lib/poi-cluster.ts` — text-color CSS-Var → statischer Hex-Wert
+- `VERSION` — 1.2.1
+- `package.json` — 1.2.1
+- `src/components/sidebar/Sidebar.tsx` — 1.2.1
+- `src/components/dashboard/HeaderBar.tsx` — 1.2.1
+- `src/lib/export.ts` — 1.2.1
+- `src/lib/geocode.ts` — 1.2.1
+- `README.md` — v1.2.1 Badge, Versionshistorie
+- `CHANGELOG.md` — v1.2.1 Eintrag
+
+---
+
 ## [1.1.0] — 2026-04-15
 
 ### Minor — "Typ 2 AC Charge": Dedizierte Overpass-Query, 1m Breite Docs, Professional README

@@ -10,6 +10,40 @@ Alle Änderungen sind chronologisch dokumentiert. Versionsnummern folgen [Semant
 
 ---
 
+## [0.6.0] — 2026-04-14
+
+### Major — Cargo Bike (Lastenrad) Routing: Barriere-Check, Oberflächen-Analyse, Steigungs-Sicherheit, Griechenland-Expansion
+
+CTO-Audit: Kompletter Code zerpflückt und auf 1m+ Lastenrad-Physik ausgerichtet. Keine "Fahrradwege" mehr — "Lastenrad-Trassen".
+
+#### Critical Fixes
+- **B1: Kein Lastenrad-Profil**: 7 Profile (Rennrad, Trekking, MTB, Safety, Auto×2, Walk) — kein Profil für 1m+ breite Lastenräder. BRouter bietet kein natives Cargo-Profil.
+  - **Fix**: Neues `cargo` Profil hinzugefügt (first in list). Nutzt `trekking` als BRouter-Basis (bestes Breitenprofil), mit `safety` als sichere Alternative. 3 Routen-Varianten: shortest/fastest/safest.
+- **B2: Barriere-Check komplett fehlte**: `avoidBarriers` Parameter existierte in `calculateRoutes()` wurde aber **NIEMALS verwendet**. cycle_barrier, kissing_gate, bollard — alles ignoriert. Ein 1m Lastenrad passt durch kaum eine Standard-Umlaufsperre.
+  - **Fix**: Neue POI-Kategorien `barrier` (cycle_barrier, kissing_gate, stile, gate, lift_gate), `narrow` (bollard, block). Overpass-Query `buildCargoSafetyQuery()` sucht aktiv nach Barrieren entlang der Route. Neue Kategorie-Tags in `CATEGORY_EXTRA_TAGS`.
+- **B3: Oberflächen-Analyse fehlte**: surface/smoothness/tracktype wurden komplett ignoriert. Schweres Lastenrad braucht stabilen Untergrund — sand, mud, soft_gravel sind unpassierbar.
+  - **Fix**: `SURFACE_RATING` Tabelle mit 18 Oberflächen-Typen, qualitativer Bewertung (1-5) und Farbcodierung für Lastenrad. surface_alert POI-Kategorie. Inline in routing.ts für UI-Integration.
+- **B4: Steigungs-Sicherheit nicht Lastenrad-spezifisch**: Grad-Schwellen (2/5/8%) für Rennrad, nicht für 1m+ Lastenrad. Ab 8% bergauf mit 200kg Gesamtgewicht → unmenschlich.
+  - **Fix**: `CARGO_GRADE_LIMITS` (4/6/10/15%) als konstante Schwellen. `gradeColor(grade, cargoMode)` mit Cargo-spezifischen Schwellen. `analyzeCargoGradeSafety()` generiert Warnungen: moderate (4-6%), difficult (6-10%), extreme (>10%).
+- **B5: Griechenland fehlte komplett**: 0 lokale Ladesäulen in Griechenland. Kroatien→Türkei Route durchquiert Griechenland (Ignoumenitsa→Alexandroupoli), aber keine Backup-Daten.
+  - **Fix**: 25 DEI/Hellevi-Stationen: Athen (3), A1 Korridor (3), Thessaloniki (2), Egnatia Odos E90 (4), Patra/Corinth (2), A7 Süd (2), Turkey-Grenze (3), Kreta (1), Ionien (3). Lückenlose Abdeckung Kroatien→Türkei über 8 Länder.
+
+#### Architecture
+- **3 neue POI-Kategorien**: `barrier` (🚧), `narrow` (⚠️), `surface_alert` (🟫) — Cargo-Bike-spezifische Warnungen
+- **buildCargoSafetyQuery()**: Dedizierte Overpass-Query für Barriere-Erkennung (cycle_barrier, kissing_gate, stile, bollard + width<1.2m Wege)
+- **8 lokale EV-Datensätze** (vorher 7): +greece-charging.ts
+
+#### Geänderte Dateien
+- `src/types/index.ts` — 3 neue POI-Kategorien + Config
+- `src/lib/routing.ts` — Lastenrad-Profil, CARGO_GRADE_LIMITS, SURFACE_RATING
+- `src/lib/elevation.ts` — gradeColor cargoMode, analyzeCargoGradeSafety()
+- `src/lib/overpass.ts` — barrier/narrow/surface_alert Tags, buildCargoSafetyQuery()
+- `src/lib/poi-local.ts` — greece-charging import + registry
+- `src/lib/poi-dedup.ts` — barrier/narrow/surface_alert Radii
+- `src/data/poi/greece-charging.ts` — NEU: 25 DEI Stationen
+
+---
+
 ## [0.5.9] — 2026-04-14
 
 ### Critical — POI Coverage Fix: BBox Queries + Turkish Station Expansion

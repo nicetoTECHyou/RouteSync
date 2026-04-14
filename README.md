@@ -6,7 +6,7 @@
 
 **Gemeinsam Routen planen — POIs entdecken — 1:1 Export**
 
-**RouteSync v0.6.3**
+**RouteSync v0.7.0**
 
 <br>
 
@@ -15,7 +15,7 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 [![MapLibre](https://img.shields.io/badge/MapLibre_GL-5.22-1AAC71?logo=maplibre&logoColor=white)](https://maplibre.org)
 [![Zustand](https://img.shields.io/badge/Zustand-5-764ABC)](https://github.com/pmndrs/zustand)
-[![Version](https://img.shields.io/badge/Version-0.6.3-10B981)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-0.7.0-10B981)](./CHANGELOG.md)
 
 <br>
 
@@ -77,9 +77,11 @@ RouteSync verwandelt die Routenplanung in ein **kollaboratives Erlebnis**. Erste
 | **Bis 100km Radius** | 5km, 10km, 25km, 50km, 100km — erweiterter Suchradius |
 | **Emoji-Icons** | Professionelle Emoji-Icons für alle 16 Kategorien |
 | **Klickbare Filter** | Farbcodierte Kategorie-Chips zum Ein-/Ausschalten |
-| **Overpass API** | Echte OpenStreetMap-Daten mit FIFO Queue + Rate-Limit Schutz |
+| **Overpass API** | Echte OpenStreetMap-Daten mit FIFO Queue + Endpoint-Racing + 10min Cache |
 | **Ladesäulen-Details** | Anschlüsse, Steckertypen, Leistung, Bezahlung, Website |
 | **Smart Dedup** | Union-Find Algorithmus mergt OSM + lokale Daten (50m-200m Radius) |
+| **500km+ Support** | Automatische 50km-Sektoren-Segmentierung für Langstrecken (unsichtbar für User) |
+| **Lastenrad-Check** | POI-Zugänglichkeit für 1m+ breite Lastenräder (bicycle/access/maxwidth) |
 | **8 lokale EV-Datensätze** | 97 Offline-Backup Stationen in 8 Ländern (HR, TR, RS, BA, ME, MK, BG, GR) |
 | **Add to Route** | Jeder POI hat "Via" und "Ziel" Buttons direkt im Popup |
 
@@ -283,6 +285,7 @@ Alle Änderungen sind detailliert in der [CHANGELOG.md](./CHANGELOG.md) dokument
 
 | Version | Datum | Typ | Beschreibung |
 |---------|-------|-----|-------------|
+| **0.7.0** | 2026-04-14 | Major | 500km Sektoren-Segmentierung, Endpoint-Racing, Result-Cache, Lastenrad-Check |
 | **0.6.3** | 2026-04-14 | Patch | Overpass Queue v3: 60s Timeout, Endpoint Health, Inter-Query Delay |
 | **0.6.1** | 2026-04-14 | Patch | Overpass FIFO Queue + 429 Rate-Limit Fix (24-Req-Burst eliminiert) |
 | **0.6.0** | 2026-04-14 | Major | Cargo Bike (Lastenrad) Routing: Barriere-Check, Oberflächen, Steigungs-Sicherheit, Griechenland |

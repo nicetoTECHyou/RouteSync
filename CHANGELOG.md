@@ -10,6 +10,50 @@ Alle Änderungen sind chronologisch dokumentiert. Versionsnummern folgen [Semant
 
 ---
 
+## [0.7.0] — 2026-04-14
+
+### Major — POI-Streaming: 500km Sektoren-Segmentierung, Endpoint-Racing, Result-Cache, Lastenrad-Check
+
+Komplettes Overpass-System überarbeitet. POI-Suche funktioniert jetzt auf 500km+ Strecken ohne Timeout-Blackout. Die Segmentierung ist für den User komplett unsichtbar — die UI zeigt Echtzeit-Fortschritt.
+
+#### Critical Fixes
+- **O1: Overpass Endpunkt-Fallback verursachte 10+ min Timeout-Kaskade**: Jede Query probierte alle 4 Endpunkte SEQUENTIELL mit je 60s Timeout. Bei Ausfall der ersten 3 Endpunkte: 4x60s = 240s pro Query. Bei 5 Queries: 20+ Minuten Gesamt. Die v0.6.1 Lö sung (FIFO Queue + sequenzielle Queries) mach es noch SCHLIMM — statt parallelem Racing wurden Endpunkte nacheinander probiert.
+  - **Fix**: `raceEndpoints()` — alle gesunden Endpunkte starten gleichzeitig. Erste erfolgreiche Antwort gewinnt (~1-3s), alle anderen werden per `AbortController` abgebrochen. 25s globaler Race-Timeout (statt 60s pro Endpunkt). `Promise.any`-Pattern mit manuellem Cleanup.
+- **O2: `endpointRotationIdx` nie deklariert — TDZ-Crash im Strict Mode**: Variable wurde in `fetchOverpassImpl()` verwendet (Zeilen 111, 155, 181, 198, 227) aber nie mit `let` deklariert. In strict mode (ES Modules) wirft der Zugriff auf eine undeklarierte `let`-Variable vor ihrer Deklaration einen `ReferenceError`.
+  - **Fix**: `let endpointRotationIdx = 0;` auf Module-Ebene deklariert.
+- **O3: 500km BBox-Query zu gross für Overpass**: Eine einzige Bounding-Box über 500km Route erzeugte Queries die den Overpass-Speicherlimit überschritten oder nach 45s Server-Timeout abbrachen. Ergebnis: 0 POIs bei Langstrecken.
+  - **Fix**: Routes >100km werden automatisch in 50km-Sektoren mit 5km Überlappung zerlegt. Jeder Sektor bekommt eine kleine, schnelle BBox-Query (~3s). 10 Sektoren x 6s Delay = ~60s Gesamt (vs. 10+ Minuten vorher).
+
+#### New Features
+- **500km Sektoren-Segmentierung**: Routes >100km → automatische Zerlegung in 50kmChunks mit 5km Overlap. Routes <=100km nutzen weiterhin Single-BBox (Fast-Path). Konfigurierbar: `SECTOR_LENGTH_KM`, `SECTOR_OVERLAP_KM`.
+- **Endpoint-Racing (v4)**: Alle gesunden Endpunkte starten gleichzeitig. Schnellster gewinnt, Rest wird abgebrochen. Kein sequenzieller 60s-Fallback mehr.
+- **Result-Cache (10min TTL)**: Identische Overpass-Queries liefern sofort Cached Result. Max 50 Einträge. Cache-Hits überspringen die FIFO-Queue komplett (sofortiges Ergebnis).
+- **Such-Fortschrittsanzeige**: Echtzeit-Progress-Bar zeigt Sektor X/Y, POI-Zähler, Phase (Sektoren/Marken/Lokal/Dedup). Nutzer sieht dass die Suche aktiv läuft.
+- **Abbrechen-Button (Stop)**: Suche kann jederzeit zwischen Sektoren abgebrochen werden. `AbortSignal` wird an den Aggregator weitergegeben.
+- **Lastenrad-Zugänglichkeits-Check**: POIs werden auf `bicycle=yes/no`, `access=private/customers`, `maxwidth<1.0` geprüft. POIs mit `_cargo_access=no` werden in der UI mit rotem Badge markiert. Im Detail-Expand: grüner "Lastenrad zugänglich" / roter "Lastenrad NICHT zugänglich" Indikator.
+
+#### Architecture
+- **`overpass.ts` v4**: Komplett-Rewrite mit `raceEndpoints()` (paralleles Racing + AbortController), `resultCache` (In-Memory mit TTL), `executeWithRetry()` (Retry mit frischer Endpunkt-Liste). `clearOverpassCache()` zum manuellen Cache-Reset.
+- **`poi-aggregator.ts` v2**: `splitRouteIntoSectors()` für 50km-Segmentierung. `AggregatorOptions` mit `onProgress` callback und `signal` (AbortSignal). `processElements()` Helper zentralisiert die Overpass-Response→POI Konvertierung. `checkCargoAccessibility()` prüft Lastenrad-Zugänglichkeit pro POI.
+- **`SearchProgress` Typ**: Neue Interface in `types/index.ts` mit `phase`, `current`, `total`, `poisFound`, `message`.
+- **`usePOIStore`**: Neuer State `searchProgress: SearchProgress | null` mit Setter.
+- **POIPanel**: `SearchProgressBar` Komponente mit animiertem Fortschrittsbalken. Stop-Button zum Abbrechen. Sektor-Anzeige in Stats-Bar. Lastenrad-Zugänglichkeit Badges.
+
+#### Geänderte Dateien
+- `src/lib/overpass.ts` — Komplett-Rewrite v4: Endpoint-Racing, Result-Cache, endpointRotationIdx Fix
+- `src/lib/poi-aggregator.ts` — Komplett-Rewrite v2: 50km-Sektoren, Progress, Abort, Cargo-Check
+- `src/types/index.ts` — SearchProgress Interface
+- `src/store/usePOIStore.ts` — searchProgress State
+- `src/components/sidebar/POIPanel.tsx` — Progress-Bar, Stop-Button, Cargo-Badges, AbortSignal
+- `VERSION` — 0.7.0
+- `package.json` — 0.7.0
+- `src/components/sidebar/Sidebar.tsx` — 0.7.0
+- `src/lib/export.ts` — 0.7.0
+- `src/lib/geocode.ts` — 0.7.0
+- `README.md` — v0.7.0 Badge, 500km+ Support, Lastenrad-Check Features
+
+---
+
 ## [0.6.3] — 2026-04-14
 
 ### Patch — Overpass Queue v3: Delays, Timeout, Endpoint Health

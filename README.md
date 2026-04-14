@@ -2,11 +2,11 @@
 
 # RouteSync
 
-### Kollaborative Routenplanung für Jedermann
+### Professional Cargo Bike Navigation
 
-**Gemeinsam Routen planen — POIs entdecken — 1:1 Export**
+**Type 2 AC Charging — 1m Width Verification — Southeast Europe**
 
-**RouteSync v0.9.0**
+**RouteSync v1.1.0**
 
 <br>
 
@@ -15,21 +15,42 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 [![MapLibre](https://img.shields.io/badge/MapLibre_GL-5.22-1AAC71?logo=maplibre&logoColor=white)](https://maplibre.org)
 [![Zustand](https://img.shields.io/badge/Zustand-5-764ABC)](https://github.com/pmndrs/zustand)
-[![Version](https://img.shields.io/badge/Version-0.9.0-10B981)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-1.1.0-10B981)](./CHANGELOG.md)
 
 <br>
 
-<img src="https://img.shields.io/badge/Installieren-0%20€-success?style=flat-square" /> &nbsp;
-<img src="https://img.shields.io/badge/API_Key_nötig-NEIN-success?style=flat-square" /> &nbsp;
-<img src="https://img.shields.io/badge/100%25_Open_Source-✓-10B981?style=flat-square" />
+<img src="https://img.shields.io/badge/Cargo_Bike_Focused-1m_Breite-3B82F6?style=flat-square" /> &nbsp;
+<img src="https://img.shields.io/badge/Typ_2_AC_Charging-15km_Search-EF4444?style=flat-square" /> &nbsp;
+<img src="https://img.shields.io/badge/8_Laender-97_Stationen-10B981?style=flat-square" /> &nbsp;
+<img src="https://img.shields.io/badge/API_Key_n%C3%B6tig-NEIN-success?style=flat-square" />
 
 </div>
 
 ---
 
-## In 30 Sekunden loslegen
+## Cargo Bike Navigation — Built for 1m Width
 
-RouteSync ist eine Web-App — nichts installieren, nichts registrieren.
+RouteSync is a professional-grade route planner specifically engineered for cargo bike world travel through Southeast Europe. The primary focus is on verifying route accessibility for bicycles wider than 1 meter — the critical dimension for loaded cargo bikes weighing 80-200kg. Every routing decision, POI filter, and charging station query is optimized for the physical constraints of heavy cargo bikes on Balkan roads.
+
+The application prioritizes **Type 2 AC charging** (not DC/CCS/CHAdeMO) because cargo bikes typically use AC-compatible onboard chargers in the 500-2000W range. The Quick-Action button in the header performs a dedicated Overpass API query for `socket:type2=yes` within a 15km dynamic bounding box, filtering out pure DC fast chargers that are irrelevant for cargo bike charging needs.
+
+### 1m Width Verification Technology
+
+RouteSync actively queries the OpenStreetMap Overpass API for physical obstacles that block cargo bikes wider than 100cm. The barrier detection system identifies:
+
+| Obstacle Type | OSM Tag | Cargo Bike Impact |
+|---------------|---------|-------------------|
+| **Cycle Barrier (Umlaufsperre)** | `barrier=cycle_barrier` | Standard gap is ~90cm — most cargo bikes CANNOT pass |
+| **Kissing Gate** | `barrier=kissing_gate` | V-shaped, max ~60cm — IMPOSSIBLE for cargo bikes |
+| **Bollard** | `barrier=bollard` | Variable gap, often <1m — needs individual check |
+| **Stile** | `barrier=stile` | Step-over barrier — cargo bike IMPOSSIBLE |
+| **Narrow Path** | `width<1.2` | Explicitly tagged narrow paths — route avoidance |
+
+The 4 header filters (Breite, Verkehr, Untergrund, Ladesäulen) provide instant toggle control over these cargo-critical routing parameters without opening any menu or settings panel.
+
+---
+
+## In 30 Sekunden loslegen
 
 > **1.** App öffnen
 >
@@ -41,12 +62,6 @@ RouteSync ist eine Web-App — nichts installieren, nichts registrieren.
 
 ---
 
-## Ubersicht
-
-RouteSync verwandelt die Routenplanung in ein **kollaboratives Erlebnis**. Erstelle eine Sitzung, teile den Code und plane Routen gemeinsam mit Freunden, Reisebegleitern oder deinem Team. POIs werden direkt auf der Karte angezeigt und per Klick in die Route aufgenommen. Fertige Routen exportierst du als GPX, Google Maps Link oder JSON.
-
----
-
 ## Features
 
 ### Karte
@@ -55,10 +70,19 @@ RouteSync verwandelt die Routenplanung in ein **kollaboratives Erlebnis**. Erste
 | **5 Kartenstile** | Street, Dark, Satellite, Topo, Terrain3D — powered by MapLibre GL |
 | **3D Terrain** | Echtes 3D-Gelände mit DEM-Tiles, neigbar/drehbar (1.5x Exaggeration) |
 | **Hillshade-Overlay** | Geländeschattierung auf jedem Kartenstil |
-| **Sonnenaufgangs-Kompass** | SVG-Kompass mit Azimut, Uhrzeiten, NOAA-Formel, updated bei Pan/Zoom |
-| **Notizen auf der Karte** | Rechtsklick → bearbeitbare/löschbare Notiz-Marker, 6 Farben |
-| **Layer-Kontrolle** | Routenlinie, Alt-Routen, POI-Marker, Wegpunkte, Straßennamen ein/aus |
+| **Sonnenaufgangs-Kompass** | SVG-Kompass mit Azimut, Uhrzeiten, NOAA-Formel |
+| **Notizen auf der Karte** | Rechtsklick — bearbeitbare/löschbare Notiz-Marker, 6 Farben |
+| **Layer-Kontrolle** | Routenlinie, Alt-Routen, POI-Marker, Wegpunkte ein/aus |
 | **Kontextmenü** | Rechtsklick auf der Karte für Start/Via/Ziel/Notiz-Platzierung |
+
+### Lastenrad Power-Leiste (Header)
+| Filter | Beschreibung |
+|--------|-------------|
+| **Breite** | Wege mit Barrieren <100cm und Umlaufsperren vermeiden. Sicherheitsprofil aktiv. |
+| **Verkehr** | Hauptstraßen, Schnellstraßen und Autobahnen ausgeschlossen. Radfernwege bevorzugt. |
+| **Untergrund** | Nur Asphalt und befestigte Oberflächen. Schotter/Sand gemieden (kritisch für 200kg). |
+| **Ladesäulen** | Nur Typ 2 / AC mit mindestens 1m Zugang. DC-Schnelllader (CCS/CHAdeMO) gefiltert. |
+| **Quick-Action: Ladesäulen** | Ein-Klick-Suche: Typ 2 AC im 15km-Umkreis, sortiert nach Distanz, fly-to nearest. |
 
 ### Routenplanung
 | Feature | Beschreibung |
@@ -67,23 +91,23 @@ RouteSync verwandelt die Routenplanung in ein **kollaboratives Erlebnis**. Erste
 | **3 Alternativen** | Kürzeste, Schnellste, Sicherste — automatisch berechnet |
 | **Via-Stopps** | Unbegrenzte Zwischenstopps per Rechtsklick oder POI |
 | **Höhendaten** | Auf-/Abstieg aus BRouter mit Elevation-Fallback |
-| **Post-Processing** | Routen-Kategorien werden anhand tatsächlicher Metriken validiert |
+| **Cargo-Sicherheit** | Lastenrad-Steigungsanalyse: moderate/difficult/extreme Warnungen |
 | **Drag & Drop** | Wegpunkte auf der Karte verschieben |
 
 ### POI-Entdeckung
 | Feature | Beschreibung |
 |---------|-------------|
 | **19 Kategorien** | Ladesäule, Restaurant, Café, Krankenhaus, Apotheke, Camping, Sehenswürdigkeit, Tankstelle, Trinkwasser, Fahrradwerkstatt, Parking, Hotel, ATM, Bäckerei + Cargo-Sicherheit (Barriere, Engpass, Oberfläche) |
+| **SVG-Icon-System** | Professionelle minimalistische Inline-SVG-Icons für alle Kategorien (keine Emojis) |
 | **Bis 100km Radius** | 5km, 10km, 25km, 50km, 100km — erweiterter Suchradius |
-| **Emoji-Icons** | Professionelle Emoji-Icons für alle 16 Kategorien |
 | **Klickbare Filter** | Farbcodierte Kategorie-Chips zum Ein-/Ausschalten |
-| **Overpass API** | Echte OpenStreetMap-Daten mit FIFO Queue + Endpoint-Racing + 10min Cache |
+| **Overpass API** | FIFO Queue + Endpoint-Racing + 10min Cache + 3-Endpoint Racing |
+| **Typ 2 / AC Query** | Dedizierte Overpass-Query: `socket:type2=yes`, 15km max, DC-Filter |
 | **Ladesäulen-Details** | Anschlüsse, Steckertypen, Leistung, Bezahlung, Website |
 | **Smart Dedup** | Union-Find Algorithmus mergt OSM + lokale Daten (50m-200m Radius) |
-| **500km+ Support** | Automatische 50km-Sektoren-Segmentierung für Langstrecken (unsichtbar für User) |
-| **Lastenrad-Check** | POI-Zugänglichkeit für 1m+ breite Lastenräder (bicycle/access/maxwidth) |
+| **500km+ Support** | Automatische 50km-Sektoren-Segmentierung |
+| **1m Lastenrad-Check** | POI-Zugänglichkeit: bicycle, access, maxwidth Tags |
 | **8 lokale EV-Datensätze** | 97 Offline-Backup Stationen in 8 Ländern (HR, TR, RS, BA, ME, MK, BG, GR) |
-| **Add to Route** | Jeder POI hat "Via" und "Ziel" Buttons direkt im Popup |
 
 ### Höhenprofil
 | Feature | Beschreibung |
@@ -91,89 +115,42 @@ RouteSync verwandelt die Routenplanung in ein **kollaboratives Erlebnis**. Erste
 | **Interaktives SVG** | Overlay oben an der Karte, aufklappbar |
 | **Steigungsfarben** | Grün (flach), Gelb (leicht), Orange (mittel), Rot (steil) — Cargo-spezifisch (4/6/10%) |
 | **Hover-Tooltip** | km-Position, Höhe, Steigung in % + Marker auf der Karte |
-| **Cargo-Sicherheit** | Lastenrad-Steigungsanalyse: moderate/difficult/extreme Warnungen |
-| **Open-Meteo API** | Kostenloses Elevation-API, max 2000 Punkte, Batching mit Cache + 429-Schutz |
+| **>10% Warnung** | Rote Markierung bei kritischen Steigungen für 200kg Gesamtgewicht |
 
 ### Kollaborative Sitzung
 | Feature | Beschreibung |
 |---------|-------------|
 | **Session-Code** | 6-stelliger kryptographisch sicherer Code (crypto.getRandomValues) |
 | **3 Rollen** | Host (volle Rechte), Editor (Wegpunkte/Routen ändern), Viewer (nur lesen) |
-| **Schreibrechte** | Host kann Teilnehmern Editor-Rechte geben oder entziehen |
-| **Kick-User** | Host kann Teilnehmer aus der Session entfernen |
-| **Anti-Echo** | Remote-Updates werden nicht zurückgesendet (Echo-Vermeidung) |
+| **Anti-Echo** | Remote-Updates werden nicht zurückgesendet |
 | **Web-Chat** | Echtzeit-Chat für alle Teilnehmer der Sitzung |
 | **Farb-System** | Jeder Teilnehmer bekommt eine eindeutige Farbe |
 
 ### Export
 | Feature | Beschreibung |
 |---------|-------------|
-| **GPX** | Kompatible GPX-Datei mit Wegpunkten und Track (XML-Injection geschützt) |
-| **KML** | Google Earth kompatibles KML-Format |
-| **GeoJSON** | Standard-GeoJSON für weitere Verarbeitung |
-| **Google Maps** | Direkter Link mit allen Wegpunkten + Fahrrad-Modus |
-| **Apple Maps** | Multi-Stop Route mit Via-Punkten |
-| **Waze** | Direkter Navigations-Link |
-| **HERE WeGo** | HERE Maps Navigation |
-| **Organic Maps** | Alle Wegpunkte als Route übergeben |
-| **JSON** | 1:1 Route mit allen Daten (Import-fähig) |
-| **Import** | JSON-Import mit Validierung und automatischer Wiederherstellung |
+| **GPX / KML / GeoJSON** | Standard-Formate mit Wegpunkten und Track |
+| **Google Maps / Apple Maps / Waze / HERE / Organic Maps** | Direkte Navigationslinks |
+| **JSON Import/Export** | 1:1 Route mit allen Daten (Import-fähig) |
 
-### Mobile
+### Professional UI
 | Feature | Beschreibung |
 |---------|-------------|
-| **Listener Mode** | Mobile Nutzer (< 768px) sehen Vollbild-Karte + Chat |
-| **Touch-optimiert** | POI-Popups, Kartensteuerung, Chat-Eingabe |
-| **Responsive** | Sidebar wird auf Mobilgeräten automatisch ausgeblendet |
+| **SVG-Icon-System** | Alle Icons als minimalistische Inline-SVGs (keine Emojis, keine externen Dependencies) |
+| **Tooltip auf jedem Element** | Hover-Tooltips mit präziser technischer Erklärung |
+| **Kollabierbare Options** | Settings-Panel für Sitzung, Chat, Export, Karte |
+| **Responsive** | Desktop Dashboard + Mobile Listener-Mode |
 
 ---
 
 ## Tar-Struktur (Release-Paket)
 
 ```
-RouteSync-vX.Y.Z.tar              ← Release-Tar (alles in einem)
-├── RouteSync-vX.Y.Z-source.tar   ← Kompletter Source + README + CHANGELOG + VERSION
-├── RouteSync-vX.Y.Z-static.tar   ← Production Build (dist/) + README + CHANGELOG + VERSION
-└── VERSION
+RouteSync-vX.Y.Z.tar              <- Release-Tar (alles in einem)
+|-- RouteSync-vX.Y.Z-source.tar   <- Kompletter Source + README + CHANGELOG + VERSION
+|-- RouteSync-vX.Y.Z-static.tar   <- Production Build (dist/) + README + CHANGELOG + VERSION
+`-- VERSION
 ```
-
-**Inhalt des Source-Tars:**
-```
-RouteSync-vX.Y.Z/
-├── src/                     ← Kompletter TypeScript-Source
-├── public/                  ← Statische Assets
-├── prisma/                  ← Datenbank-Schema
-├── scripts/                 ← Build- und Release-Skripte
-├── package.json             ← Dependencies & Scripts
-├── tsconfig.json            ← TypeScript-Konfiguration
-├── next.config.ts           ← Next.js-Konfiguration
-├── postcss.config.mjs       ← PostCSS-Konfiguration
-├── eslint.config.mjs        ← ESLint-Konfiguration
-├── tailwind.config.ts       ← Tailwind-Konfiguration
-├── components.json          ← shadcn/ui Konfiguration
-├── README.md                ← Diese Datei
-├── CHANGELOG.md             ← Versionshistorie
-├── VERSION                  ← Aktuelle Version
-├── Caddyfile                ← Caddy Reverse-Proxy Konfiguration
-└── bun.lock                 ← Dependency-Lockfile
-```
-
-**Inhalt des Static-Tars:**
-```
-RouteSync-vX.Y.Z/
-├── dist/                    ← Production Build (Next.js Static Export)
-├── README.md                ← Diese Datei
-├── CHANGELOG.md             ← Versionshistorie
-└── VERSION                  ← Aktuelle Version
-```
-
-| Typ | Format | Beschreibung |
-|-----|--------|-------------|
-| **Patch** | x.x.Z | Bug Fixes, kleine Korrekturen |
-| **Minor** | x.Y.0 | Große Fixes, Security, Route-Änderungen |
-| **Major** | X.0.0 | Neue Features, Breaking Changes |
-
-> **WICHTIG — Static-Tar Inhalts-Regel:** Nach jedem Build MUSS `dist/` die Dateien `README.md`, `CHANGELOG.md` und `VERSION` enthalten.
 
 ---
 
@@ -181,47 +158,48 @@ RouteSync-vX.Y.Z/
 
 ```
 src/
-├── app/
-│   ├── globals.css              # Tailwind CSS v4 + Theme + Glass
-│   ├── layout.tsx               # Root Layout (ThemeProvider)
-│   └── page.tsx                 # Main App (Desktop/Mobile)
-├── types/
-│   └── index.ts                 # TypeScript Interfaces & POI Config
-├── store/
-│   ├── useRouteStore.ts         # Wegpunkte & Routendaten
-│   ├── useSessionStore.ts       # Sitzung, Chat, Teilnehmer, Sync-Bridge
-│   ├── usePOIStore.ts           # POI-Suche & Filter
-│   ├── useMapStore.ts           # Karten-Einstellungen (3D, Layer)
-│   └── useElevationStore.ts     # Höhenprofil-Daten & Cache
-├── lib/
-│   ├── utils.ts                 # cn(), formatDistance/Duration
-│   ├── session.ts               # Session-Code (crypto-safe), Teilnehmer-Verwaltung
-│   ├── peerSync.ts              # PeerJS WebRTC Sync-Bridge
-│   ├── geocode.ts               # Nominatim Geocoding + User-Agent
-│   ├── routing.ts               # BRouter API (7 Profile, 3 Kategorien, Dedup)
-│   ├── overpass.ts              # Overpass API (Retry/Fallback, Duplicate-Guard)
-│   ├── elevation.ts             # Open-Meteo Elevation (Batch, Retry, Backoff)
-│   ├── sun.ts                   # NOAA Sonnenstands-Berechnung
-│   ├── export.ts                # GPX, KML, GeoJSON, Maps-Links, JSON (XML-safe)
-│   ├── poiFormatter.ts          # POI Popup-Formatter (Ladesäulen, etc.)
-│   └── db.ts                    # Prisma ORM (Query-Logging Dev-only)
-├── components/
-│   ├── map/
-│   │   ├── MapView.tsx          # MapLibre GL Karte + POI/Note-Marker + Terrain
-│   │   ├── MapControls.tsx      # Zoom, Style, Layer-Toggles, 3D-Controls
-│   │   ├── ElevationProfile.tsx # Interaktives Höhenprofil SVG
-│   │   └── SunriseCompass.tsx   # Sonnenaufgangs-Kompass Overlay
-│   ├── sidebar/
-│   │   ├── Sidebar.tsx          # 5-Tab Layout
-│   │   ├── RoutePanel.tsx       # Routenplanung
-│   │   ├── POIPanel.tsx         # POI-Suche
-│   │   ├── SessionPanel.tsx     # Teilnehmer-Verwaltung
-│   │   ├── ChatPanel.tsx        # Web-Chat
-│   │   └── ExportPanel.tsx      # Export-Optionen
-│   ├── session/
-│   │   ├── JoinOverlay.tsx      # Landing/Create/Join
-│   │   └── SessionHeader.tsx    # Session-Info-Bar
-│   └── ui/                      # shadcn/ui Komponenten
+|-- app/
+|   |-- globals.css              # Tailwind CSS v4 + Theme + Glass
+|   |-- layout.tsx               # Root Layout (ThemeProvider)
+|   `-- page.tsx                 # Main App (Desktop/Mobile)
+|-- types/
+|   `-- index.ts                 # TypeScript Interfaces & POI Config
+|-- store/
+|   |-- useRouteStore.ts         # Wegpunkte & Routendaten
+|   |-- useSessionStore.ts       # Sitzung, Chat, Teilnehmer, Sync-Bridge
+|   |-- usePOIStore.ts           # POI-Suche & Filter
+|   |-- useMapStore.ts           # Karten-Einstellungen + Lastenrad-Filter
+|   `-- useElevationStore.ts     # Höhenprofil-Daten & Cache
+|-- lib/
+|   |-- overpass.ts              # Overpass API (Typ 2 Query, Racing, Cache, Queue)
+|   |-- poi-aggregator.ts        # Multi-Source POI Aggregator (Tile-Cache, Sektoren)
+|   |-- poi-tiles.ts             # 1x1 Tile-Cache (IndexedDB, 7d TTL)
+|   |-- routing.ts               # BRouter API (8 Profile, Cargo-Grade-Limits)
+|   |-- elevation.ts             # Open-Meteo Elevation (Batch, Queue)
+|   |-- export.ts                # GPX, KML, GeoJSON, Maps-Links, JSON
+|   |-- geocode.ts               # Nominatim Geocoding + User-Agent
+|   `-- peerSync.ts              # PeerJS WebRTC Sync-Bridge
+|-- components/
+|   |-- icons/index.tsx          # SVG Icon System (20+ minimalist Icons)
+|   |-- map/
+|   |   |-- MapView.tsx          # MapLibre GL Karte + POI/Note-Marker + Terrain
+|   |   |-- MapControls.tsx      # Zoom, Style, Layer-Toggles, 3D (SVG Icons)
+|   |   |-- ElevationProfile.tsx # Interaktives Höhenprofil SVG
+|   |   `-- SunriseCompass.tsx   # Sonnenaufgangs-Kompass Overlay
+|   |-- dashboard/
+|   |   |-- DashboardLayout.tsx  # Drei-Zonen-Layout
+|   |   |-- HeaderBar.tsx        # Power-Leiste + Typ 2 Quick-Action + Filter
+|   |   |-- LeftSidebar.tsx      # Route-Konfiguration
+|   |   |-- RightSidebar.tsx     # POI + Dynamic Summary
+|   |   `-- SettingsPanel.tsx    # Settings Slide-Over
+|   |-- sidebar/
+|   |   |-- Sidebar.tsx          # 5-Tab Layout (Fallback)
+|   |   |-- RoutePanel.tsx       # Routenplanung
+|   |   |-- POIPanel.tsx         # POI-Suche
+|   |   |-- SessionPanel.tsx     # Teilnehmer-Verwaltung
+|   |   |-- ChatPanel.tsx        # Web-Chat
+|   |   `-- ExportPanel.tsx      # Export-Optionen
+|   `-- ui/                      # shadcn/ui Komponenten
 ```
 
 ---
@@ -229,26 +207,10 @@ src/
 ## Entwicklung
 
 ```bash
-# Abhängigkeiten installieren
 bun install
-
-# Dev-Server starten (localhost:3000)
 bun run dev
-
-# Production Build erstellen
 bun run build
-
-# Build starten
-bun run start
-
-# Lint prüfen
-bun run lint
-
-# Source-Tar erstellen
-bun run package:source
-
-# Build + Source-Tar
-bun run package:release
+bun run release
 ```
 
 ---
@@ -262,7 +224,6 @@ bun run package:release
 | ![Tailwind CSS](https://img.shields.io/badge/Tailwind-06B6D4?logo=tailwindcss) | Styling (v4) |
 | ![Zustand](https://img.shields.io/badge/Zustand-764ABC) | State Management (v5) |
 | ![MapLibre GL](https://img.shields.io/badge/MapLibre-1AAC71?logo=maplibre) | Karten-Rendering (v5.22) |
-| ![Radix UI](https://img.shields.io/badge/Radix_UI-6E56CF?logo=radixui) | UI-Komponenten (shadcn/ui) |
 
 ---
 
@@ -270,9 +231,9 @@ bun run package:release
 
 | API | Zweck | Kosten |
 |-----|-------|--------|
-| [BRouter](https://brouter.de) | Routenberechnung (7 Profile) | Kostenlos |
+| [BRouter](https://brouter.de) | Routenberechnung (8 Profile) | Kostenlos |
 | [Nominatim](https://nominatim.org) | Geocoding / Adresssuche | Kostenlos |
-| [Overpass](https://overpass-api.de) | POI-Suche (16 Kategorien) | Kostenlos |
+| [Overpass](https://overpass-api.de) | POI-Suche + Typ 2 Ladesäulen | Kostenlos |
 | [CARTO Tiles](https://carto.com) | Kartenstile (Street/Dark) | Kostenlos |
 | [OpenTopoMap](https://opentopomap.org) | Topographische Karte | Kostenlos |
 | [Esri](https://esri.com) | Satellitenbild-Karte | Kostenlos |
@@ -285,39 +246,19 @@ Alle Änderungen sind detailliert in der [CHANGELOG.md](./CHANGELOG.md) dokument
 
 | Version | Datum | Typ | Beschreibung |
 |---------|-------|-----|-------------|
-| **0.9.0** | 2026-04-15 | Major | Dashboard-Layout: Header + Links/Rechts Sidebar, Settings-Panel, Kontext-Aktionen, Dynamic Summary |
-| **0.8.1** | 2026-04-15 | Patch | Center-Query Tile-Cache-Integration, Center-Radius-Filter, Brand-Regex-konsolidierung, Result-Limit |
-| **0.8.0** | 2026-04-15 | Major | Tile-basierter POI-Cache (IndexedDB, 7d TTL), Instant Reload für gecachte Routen |
-| **0.7.2** | 2026-04-14 | Minor | Höhenprofil 500km Fix, Live-Autocomplete, Ladesäulen-Expansion (TR/Balkan), Batch-Fehlerresilienz |
-| **0.7.1** | 2026-04-14 | Patch | Korridor-Filter, Brand-Integration in Sektoren, overpass.ru entfernt, Category-Fix |
-| **0.7.0** | 2026-04-14 | Major | 500km Sektoren-Segmentierung, Endpoint-Racing, Result-Cache, Lastenrad-Check |
-| **0.6.3** | 2026-04-14 | Patch | Overpass Queue v3: 60s Timeout, Endpoint Health, Inter-Query Delay |
-| **0.6.1** | 2026-04-14 | Patch | Overpass FIFO Queue + 429 Rate-Limit Fix (24-Req-Burst eliminiert) |
-| **0.6.0** | 2026-04-14 | Major | Cargo Bike (Lastenrad) Routing: Barriere-Check, Oberflächen, Steigungs-Sicherheit, Griechenland |
-| **0.5.9** | 2026-04-14 | Critical | POI BBox Queries, Turkish Station Expansion, Case-Insensitive Brand-Suche |
-| **0.5.8** | 2026-04-14 | Critical | Elevation 429 Queue-Fix, Overpass Parallel Failover, Deep Audit |
-| **0.5.1** | 2026-04-14 | Minor | Code-Dedup, Parallel Queries, Graceful Degradation |
-| **0.5.0** | 2026-04-14 | Major | POI Aggregator: Multi-Source, Smart Dedup, 50 Local EV Stations (4 Länder) |
-| **0.4.4** | 2026-04-14 | Patch | POI Detail-Expand, Sidebar Overflow Safety |
-| **0.4.3** | 2026-04-14 | Patch | Static-Tar enthält jetzt README.md + CHANGELOG.md, Release-Script gefixt |
-| **0.4.2** | 2026-04-14 | Minor | Code-Review: 3 Critical, 10 High Fixes (Routing, Elevation, Sync, Export) |
-| **0.4.1** | 2026-04-14 | Patch | MapView TDZ-Crash Fix — Production White-Screen behoben |
-| **0.4.0** | 2026-04-14 | Minor | Security: Window-Globals eliminiert, XML-Injection-Schutz, Sync-Bugfixes |
-| **0.3.7** | 2026-04-13 | Patch | API Rate-Limit Fix, Elevation Retry-Loop, Nominatim User-Agent, DEM-Source Spaltung |
-| **0.3.6** | 2026-04-13 | Patch | ElevationProfile Marker Crash Fix — maplibre-gl CJS/ESM Interop (Production) |
-| **0.3.5** | 2026-04-13 | Patch | ElevationProfile Marker Crash Fix — dynamischer Import mit try-catch |
-| **0.3.0** | 2026-04-13 | Major | Höhenprofil — interaktives SVG-Diagramm mit Steigungsfarben |
-| **0.2.8** | 2026-04-13 | Minor | Sonnenaufgangs-Kompass, Notizen auf Karte, Navigationsexport überarbeitet |
-| **0.2.7** | 2026-04-13 | Minor | Ladesäulen-Details erweitert (Anschlüsse, Leistung, Bezahlung) |
-| **0.2.6** | 2026-04-13 | Major | 3D Terrain, Multi-Navigationsexport, POI 100km, Emoji-Icons |
-| **0.1.2** | 2026-04-13 | Patch | Hotfix — React Hydration Error #418 |
-| **0.1.1** | 2026-04-13 | Patch | Hotfix — GitHub Pages Asset 404 |
-| **0.1.0** | 2026-04-13 | Major | Erstveröffentlichung — Karten, Routing, POI, Session, Chat, Export, Mobile |
+| **1.1.0** | 2026-04-15 | Minor | Typ 2 AC Overpass Query, 1m Breite Verification Docs, README Rewrite |
+| **1.0.0** | 2026-04-15 | Major | Lastenrad Cockpit: Power-Leiste, Anti-Redundanz, Tooltips, Expert Features |
+| **0.9.0** | 2026-04-15 | Major | Dashboard-Layout: Header + Links/Rechts Sidebar, Settings-Panel |
+| **0.8.1** | 2026-04-15 | Patch | Center-Query Tile-Cache, Center-Radius-Filter, Brand-Regex |
+| **0.8.0** | 2026-04-15 | Major | Tile-basierter POI-Cache (IndexedDB, 7d TTL) |
+| **0.7.2** | 2026-04-14 | Minor | Höhenprofil 500km Fix, Ladesäulen-Expansion (TR/Balkan) |
+| **0.7.0** | 2026-04-14 | Major | 500km Sektoren-Segmentierung, Endpoint-Racing, Lastenrad-Check |
+| **0.6.0** | 2026-04-14 | Major | Cargo Bike Routing: Barriere-Check, Oberflächen, Steigungs-Sicherheit |
 
 ---
 
 <div align="center">
 
-**Built for collaborative route planning**
+**Built for cargo bike world travel**
 
 </div>

@@ -10,6 +10,48 @@ Alle Änderungen sind chronologisch dokumentiert. Versionsnummern folgen [Semant
 
 ---
 
+## [1.1.0] — 2026-04-15
+
+### Minor — "Typ 2 AC Charge": Dedizierte Overpass-Query, 1m Breite Docs, Professional README
+
+Die Ladesäulen-Suche (Quick-Action Button im Header) verwendet jetzt eine dedizierte Overpass-Query die spezifisch nach `socket:type2=yes` sucht. Zuvor wurden alle charging_station geladen und clientseitig gefiltert — ineffizient und unzuverlässig. Die neue Query priorisiert AC-Ladepunkte (Typ 2) und schliesst reine DC-Schnelllader (CCS/CHAdeMO-only) auf Overpass-Ebene aus. Zusätzlich: README komplett auf Cargo Bike Navi-Fokus umgeschrieben mit 1m Breite Verification Dokumentation.
+
+#### New Features
+- **Dedizierte Typ 2 AC Overpass-Query**: `buildType2ChargingCenterQuery()` in `overpass.ts` — neue Funktion die gezielt nach `socket:type2=yes` sucht. Beinhaltet: Type 2 Socket-Filter, amenity=charging_station Fallback, Brand/Operator Regex (SE Europe), supercharge=yes. Max 15km dynamischer Radius.
+- **type2Only Flag im Aggregator**: `AggregatorOptions.type2Only` — wenn `true`, wird die dedizierte Typ 2 Query statt der generischen Enhanced Charging Query verwendet. Der Header Quick-Action Button nutzt dieses Flag.
+- **Professional README Rewrite**: Komplett neue README fokussiert auf Cargo Bike World Travel: 1m Width Verification Technologie-Tabelle, Typ 2 AC Charging Erklärung, Southeast Europe Abdeckung, SVG-Icon-System Dokumentation, 8-Länder EV-Datensatz-Referenz.
+
+#### Architecture
+- **`overpass.ts`**: Neue exportierte Funktion `buildType2ChargingCenterQuery(lat, lon, radius)` — dedizierte Typ 2 / AC Overpass-Query mit 15km Hard-Cap.
+- **`poi-aggregator.ts`**: `AggregatorOptions` erweitert um `type2Only?: boolean`. Center-Such-Flow prüft Flag und wählt entsprechende Query.
+- **`HeaderBar.tsx`**: Quick-Action Button nutzt jetzt `type2Only: true` beim Aufruf von `searchPOIsAggregated()`.
+
+#### Version Bump — 1.1.0
+Konsistenter Version-Bump über alle 6 Dateien:
+
+| Datei | Alt | Neu |
+|-------|-----|-----|
+| `VERSION` | 1.0.0 | 1.1.0 |
+| `package.json` | 1.0.0 | 1.1.0 |
+| `src/components/dashboard/HeaderBar.tsx` | 1.0.0 | 1.1.0 |
+| `src/components/sidebar/Sidebar.tsx` | 1.0.0 | 1.1.0 |
+| `src/lib/export.ts` | 1.0.0 | 1.1.0 |
+| `src/lib/geocode.ts` | 1.0.0 | 1.1.0 |
+
+#### Geänderte Dateien
+- `src/lib/overpass.ts` — buildType2ChargingCenterQuery() hinzugefügt
+- `src/lib/poi-aggregator.ts` — type2Only Flag, Typ 2 Query Integration
+- `src/components/dashboard/HeaderBar.tsx` — type2Only=true, v1.1.0
+- `VERSION` — 1.1.0
+- `package.json` — 1.1.0
+- `src/components/sidebar/Sidebar.tsx` — 1.1.0
+- `src/lib/export.ts` — 1.1.0
+- `src/lib/geocode.ts` — 1.1.0
+- `README.md` — Komplett-Rewrite: Cargo Bike Navi, 1m Breite, Typ 2 AC
+- `CHANGELOG.md` — v1.1.0 Eintrag
+
+---
+
 ## [1.0.0] — 2026-04-15
 
 ### Major — "The Lastenrad Cockpit": Power-Leiste, Anti-Redundanz, Tooltips, Expert Features

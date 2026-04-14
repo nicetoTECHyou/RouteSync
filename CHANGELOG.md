@@ -10,6 +10,40 @@ Alle Änderungen sind chronologisch dokumentiert. Versionsnummern folgen [Semant
 
 ---
 
+## [1.3.0] — 2026-04-15
+
+### Major — POI Rendering Fix: Anti-Lag Clustering, Layer-Data Separation, High-Zoom Cluster-Expand
+
+POI-Daten wurden vom Overpass-API korrekt geladen und in der Sidebar angezeigt, aber auf der Karte erschienen keine Marker. Ursache war ein architektonischer Fehler im Rendering-Flow: Layer-Management und Daten-Updates waren im selben useEffect gekoppelt, was bei jeder POI-Änderung zu `clearPOILayers()` → `addPOIClusterLayersToMap()` → `setData()` führte. Bei Style-Wechseln oder schnellen Such-Reset-Zyklen fielen POIs durch die Race-Condition verloren. Zusätzlich wurden leere `try/catch {}`-Blöcke Fehler beim `setData()` lautlos verschluckt.
+
+#### Critical Fixes
+- **G1: POIs nicht auf der Karte sichtbar**: Der monolithische POI-useEffect führte bei JEDEM `pois`-Change `clearPOILayers()` aus, was Source und 4 Layer entfernte. Dann `addPOIClusterLayersToMap()` neu erstellt. Bei Style-Wechseln rief `style.load` die Layer-Neuerstellung auf, aber der sofort folgende Effect-Cleanup löschte sie wieder. Das Ergebnis: POIs waren in der Datenbank aber nicht sichtbar.
+  - **Fix**: Effekt in 2 separate useEffects aufgeteilt: (1) **Layer-Lifecycle** (`showPOIMarkers`, `styleLoadCount`) — erstellt/entfernt Source + Layer nur bei Style-Wechsel oder Sichtbarkeitstoggle. (2) **Data-Update** (`pois`) — aktualisiert NUR die GeoJSON-Daten via `source.setData()`, berührt Layer nicht.
+- **G2: Leere Catch-Blöcke verschluckten Rendering-Fehler**: `updateClusters()` hatte `try {} catch {}` ohne Logging. Wenn `map.getSource().setData()` fehlschlug (z.B. wegen fehlendem Source nach Style-Wechsel), wurde der Fehler ignoriert und nichts gerendert.
+  - **Fix**: Alle leeren Catch-Blöcke durch `console.warn('[MapView] ...', err)` ersetzt. Fehler werden jetzt im Dev-Console sichtbar.
+- **G3: High-Zoom Cluster-Lücke (POIs unsichtbar bei Zoom 14+)**: Bei Zoom >= 14 wurden Canvas-Layer geleert und nur individuelle (nicht-geclusterte) POIs als DOM-Marker gerendert. Cluster-Gruppen (3+ POIs) wurden komplett ignoriert (`if (isCluster) return;`). In dicht besiedelten Gebieten verschwanden dadurch Dutzende POIs beim Reinzoomen.
+  - **Fix**: `renderPOIIndividualMarkers()` ruft jetzt `engine.getChildren(clusterId)` auf und expandiert Cluster-Gruppen in individuelle DOM-Marker. Bei Zoom >=14 sind ALLE POIs sichtbar, egal ob geclustert oder nicht.
+- **G4: Marker-Erstellungs-Code dupliziert**: Die 100+ Zeilen für POI-DOM-Marker-Erstellung waren inline im useEffect, was den Code schwer wartbar machte und bei beiden Pfaden (Layer-Lifecycle + Data-Update) dupliziert werden musste.
+  - **Fix**: Marker-Erstellung in 2 extrahierte Funktionen ausgelagert: `renderPOIIndividualMarkers(map, engine, highZoom, canEdit)` und `createPOIDOMMarker(map, poi, canEdit)`. Beide Effects teilen sich denselben Code.
+
+#### Architecture
+- **MapView.tsx POI Rendering**: 2 separate useEffects statt 1. Layer-Lifecycle (showPOIMarkers + styleLoadCount) und Data-Update (pois + canUserEdit). Kein `clearPOILayers` bei Daten-Updates mehr.
+- **`renderPOIIndividualMarkers()`**: Extrahierte Funktion die Cluster-Gruppen via `engine.getChildren()` expandiert.
+- **`createPOIDOMMarker()`**: Extrahierte Funktion für einzelne POI-DOM-Marker mit Popup + Hover-Tooltip.
+
+#### Geänderte Dateien
+- `src/components/map/MapView.tsx` — POI Rendering komplett restrukturiert (2 Effects, extrahierte Funktionen, Error-Logging)
+- `VERSION` — 1.3.0
+- `package.json` — 1.3.0
+- `src/components/sidebar/Sidebar.tsx` — 1.3.0
+- `src/components/dashboard/HeaderBar.tsx` — 1.3.0
+- `src/lib/export.ts` — 1.3.0
+- `src/lib/geocode.ts` — 1.3.0
+- `README.md` — v1.3.0 Badge, Versionshistorie
+- `CHANGELOG.md` — v1.3.0 Eintrag
+
+---
+
 ## [1.2.2] — 2026-04-15
 
 ### Patch — Dreistufige POI-Suchpriorität: Standort > Route > Center

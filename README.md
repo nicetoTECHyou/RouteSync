@@ -6,7 +6,7 @@
 
 **Type 2 AC Charging — 1m Width Verification — Southeast Europe**
 
-**RouteSync v1.2.2**
+**RouteSync v1.3.0**
 
 <br>
 
@@ -15,7 +15,7 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 [![MapLibre](https://img.shields.io/badge/MapLibre_GL-5.22-1AAC71?logo=maplibre&logoColor=white)](https://maplibre.org)
 [![Zustand](https://img.shields.io/badge/Zustand-5-764ABC)](https://github.com/pmndrs/zustand)
-[![Version](https://img.shields.io/badge/Version-1.2.2-10B981)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-1.3.0-10B981)](./CHANGELOG.md)
 
 <br>
 
@@ -246,6 +246,7 @@ Alle Änderungen sind detailliert in der [CHANGELOG.md](./CHANGELOG.md) dokument
 
 | Version | Datum | Typ | Beschreibung |
 |---------|-------|-----|-------------|
+| **1.3.0** | 2026-04-15 | Major | POI Rendering Fix: Layer-Data Separation, High-Zoom Cluster-Expand |
 | **1.2.2** | 2026-04-15 | Patch | Dreistufige POI-Suchpriorität: Standort > Route > Center |
 | **1.2.1** | 2026-04-15 | Patch | MapLibre CSS-Var Paint-Property Fix (POI-Labels) |
 | **1.1.0** | 2026-04-15 | Minor | Typ 2 AC Overpass Query, 1m Breite Verification Docs, README Rewrite |

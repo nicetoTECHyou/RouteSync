@@ -10,6 +10,42 @@ Alle Änderungen sind chronologisch dokumentiert. Versionsnummern folgen [Semant
 
 ---
 
+## [0.7.1] — 2026-04-14
+
+### Patch — Korridor-Filter, Brand-Integration, overpass.ru entfernt, Category-Detection Fix
+
+POI-Suche auf 587km Route zeigte "halbe Türkei" an Ladesäulen und Sektoren 2-11 fanden 0 POIs. Drei kritische Bugs identifiziert und behoben.
+
+#### Critical Fixes
+- **P1: Brand-Queries nutzten GESAMTE Routen-BBOX statt Korridor**: `buildBrandQueries()` berechnete eine BBox über die komplette 587km Route (~150.000 km2). Ergebnis: 121 POIs quer durch die Türkei, viele hunderte Kilometer von der Route entfernt. Overpass-Timeouts auf so großen Queries (26s Server-Timeout).
+  - **Fix**: Brand-Queries komplett aus dem segmentierten Modus entfernt. Marken-Suche (brand/operator/supercharge) ist jetzt in JEDE Sektor-Query integriert über `buildCorridorPOIQuery()`. Einzelner Regex mit `|` (OR) — 3 extra Filter-Zeilen statt 60+.
+- **P2: Sektoren fanden 0 POIs weil Brand-Tags fehlten**: Sektor-Queries suchten nur `amenity=charging_station`. In SE-Europa (Bosnien, Serbien, Türkei) sind viele Ladesäulen nur per `brand=Trugo` oder `operator=ZES` getaggt — OHNE `amenity=charging_station`. Diese wurden von Sektor-Queries komplett ignoriert. Nur die Full-BBOX Brand-Queries (Bug P1) fanden sie — aber ohne Korridor-Filter.
+  - **Fix**: `buildCorridorPOIQuery()` enthält jetzt 30+ Marken (ELEN, Trugo, ZES, Ionity, Tesla, Shell, etc.) als `brand~"..."` und `operator~"..."` Regex-Filter. Jeder 50km-Sektor findet jetzt alle Ladesäulen — egal wie sie getaggt sind.
+- **P3: Category-Detection klassifizierte ALLES als "charging"**: `processElements()` zwang jeden POI mit `brand` oder `operator` Tag zu `category='charging'` — auch Shell-Tankstellen (`amenity=fuel` + `brand=Shell`). Ergebnis: Tankstellen erschienen als Ladesäulen in den Ergebnissen.
+  - **Fix**: 3-stufige Category-Detection: (1) `amenity=charging_station` oder `supercharge=yes` → definitiv charging. (2) Brand/Operator OHNE konfligierende Amenität → charging. (3) Standard `detectCategory()`. Konfligierende Amenitäten (fuel, restaurant, etc.) und Shops verhindern Falschzuordnung.
+- **P4: overpass.ru consistently dead**: `overpass.openstreetmap.ru` antwortete jedes Mal mit `ERR_CONNECTION_TIMED_OUT`. Im Race verbrauchte es einen Slot und 25s Timeout pro Query — ohne jemals zu antworten.
+  - **Fix**: Komplett aus `OVERPASS_ENDPOINTS` entfernt. 3 statt 4 Endpunkte im Race = weniger Rate-Limit-Stress.
+
+#### New Features
+- **Korridor-Distanzfilter**: Nach allen Overpass-Queries werden OSM-POIs gefiltert die mehr als 1.5x Korridor-Radius von der Route entfernt sind. Verhindert dass BBOX-Überschuss (Rechteck vs. Linie) POIs weit weg von der Route anzeigt. Log-Ausgabe: "Corridor filter: removed N POIs too far from route".
+
+#### Architecture Changes
+- **`overpass.ts`**: `ALL_CHARGING_BRANDS` Konstante (30+ Marken als Regex). `buildCorridorPOIQuery()` erweitert mit brand/operator/supercharge Filtern wenn `charging` Kategorie ausgewählt. `overpass.ru` entfernt. `QUERY_DELAY_MS` 6s → 10s (weniger 429s).
+- **`poi-aggregator.ts`**: Full-BBOX Brand-Queries im segmentierten Modus entfernt. Korridor-Distanzfilter nach Overpass-Queries. Smart Category-Detection in `processElements()`.
+
+#### Geänderte Dateien
+- `src/lib/overpass.ts` — ALL_CHARGING_BRANDS, buildCorridorPOIQuery Brand-Erweiterung, overpass.ru entfernt, Delay 10s
+- `src/lib/poi-aggregator.ts` — Brand-Queries entfernt, Korridor-Filter, Smart Category-Detection
+- `VERSION` — 0.7.1
+- `package.json` — 0.7.1
+- `src/components/sidebar/Sidebar.tsx` — 0.7.1
+- `src/lib/export.ts` — 0.7.1
+- `src/lib/geocode.ts` — 0.7.1
+- `README.md` — v0.7.1 Badge, Versionshistorie
+- `CHANGELOG.md` — v0.7.1 Eintrag
+
+---
+
 ## [0.7.0] — 2026-04-14
 
 ### Major — POI-Streaming: 500km Sektoren-Segmentierung, Endpoint-Racing, Result-Cache, Lastenrad-Check

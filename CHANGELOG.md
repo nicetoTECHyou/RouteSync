@@ -10,6 +10,24 @@ Alle Änderungen sind chronologisch dokumentiert. Versionsnummern folgen [Semant
 
 ---
 
+## [0.6.2] — 2026-04-14
+
+### Patch — README auf aktuellen Stand gebracht
+
+#### Fixes
+- **R1: README bei 0.4.3 stehengeblieben**: Versionsnummer, Badge und Versionshistorie-Tabelle zeigten 0.4.3 statt 0.6.1. Fehlende Versionen (0.5.0–0.6.1) nicht in Tabelle aufgeführt.
+  - **Fix**: README komplett aktualisiert: Titel, Badge, Versionshistorie-Tabelle (7 fehlende Einträge ergänzt). Feature-Tabellen aktualisiert: 8 Profile (Cargo), 19 Kategorien, Smart Dedup, 8 EV-Datensätze (97 Stationen), Cargo-Sicherheitsanalyse, FIFO Queue Rate-Limit Schutz.
+
+#### Geänderte Dateien
+- `README.md` — Version 0.6.2, Badge, Versionshistorie, Feature-Tabellen
+- `VERSION` — 0.6.2
+- `package.json` — 0.6.2
+- `src/components/sidebar/Sidebar.tsx` — 0.6.2
+- `src/lib/export.ts` — 0.6.2
+- `src/lib/geocode.ts` — 0.6.2
+
+---
+
 ## [0.6.1] — 2026-04-14
 
 ### Patch — Overpass Rate-Limit Fix: FIFO Queue ersetzt Parallel Burst

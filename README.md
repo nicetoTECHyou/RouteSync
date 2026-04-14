@@ -6,7 +6,7 @@
 
 **Gemeinsam Routen planen — POIs entdecken — 1:1 Export**
 
-**RouteSync v0.4.3**
+**RouteSync v0.6.1**
 
 <br>
 
@@ -15,7 +15,7 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 [![MapLibre](https://img.shields.io/badge/MapLibre_GL-5.22-1AAC71?logo=maplibre&logoColor=white)](https://maplibre.org)
 [![Zustand](https://img.shields.io/badge/Zustand-5-764ABC)](https://github.com/pmndrs/zustand)
-[![Version](https://img.shields.io/badge/Version-0.4.3-10B981)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-0.6.1-10B981)](./CHANGELOG.md)
 
 <br>
 
@@ -63,7 +63,7 @@ RouteSync verwandelt die Routenplanung in ein **kollaboratives Erlebnis**. Erste
 ### Routenplanung
 | Feature | Beschreibung |
 |---------|-------------|
-| **7 Routing-Profile** | FastBike, Trekking, MTB, Safety, Car-Fast, Car-Eco, Walk (BRouter API) |
+| **8 Routing-Profile** | Cargo, FastBike, Trekking, MTB, Safety, Car-Fast, Car-Eco, Walk (BRouter API) |
 | **3 Alternativen** | Kürzeste, Schnellste, Sicherste — automatisch berechnet |
 | **Via-Stopps** | Unbegrenzte Zwischenstopps per Rechtsklick oder POI |
 | **Höhendaten** | Auf-/Abstieg aus BRouter mit Elevation-Fallback |
@@ -73,21 +73,24 @@ RouteSync verwandelt die Routenplanung in ein **kollaboratives Erlebnis**. Erste
 ### POI-Entdeckung
 | Feature | Beschreibung |
 |---------|-------------|
-| **16 Kategorien** | Ladesäule, Restaurant, Café, Krankenhaus, Apotheke, Camping, Sehenswürdigkeit, Tankstelle, Trinkwasser, Fahrradwerkstatt, Parking, Hotel, ATM, Bäckerei + mehr |
+| **19 Kategorien** | Ladesäule, Restaurant, Café, Krankenhaus, Apotheke, Camping, Sehenswürdigkeit, Tankstelle, Trinkwasser, Fahrradwerkstatt, Parking, Hotel, ATM, Bäckerei + Cargo-Sicherheit (Barriere, Engpass, Oberfläche) |
 | **Bis 100km Radius** | 5km, 10km, 25km, 50km, 100km — erweiterter Suchradius |
 | **Emoji-Icons** | Professionelle Emoji-Icons für alle 16 Kategorien |
 | **Klickbare Filter** | Farbcodierte Kategorie-Chips zum Ein-/Ausschalten |
-| **Overpass API** | Echte OpenStreetMap-Daten mit detaillierten Popups |
+| **Overpass API** | Echte OpenStreetMap-Daten mit FIFO Queue + Rate-Limit Schutz |
 | **Ladesäulen-Details** | Anschlüsse, Steckertypen, Leistung, Bezahlung, Website |
+| **Smart Dedup** | Union-Find Algorithmus mergt OSM + lokale Daten (50m-200m Radius) |
+| **8 lokale EV-Datensätze** | 97 Offline-Backup Stationen in 8 Ländern (HR, TR, RS, BA, ME, MK, BG, GR) |
 | **Add to Route** | Jeder POI hat "Via" und "Ziel" Buttons direkt im Popup |
 
 ### Höhenprofil
 | Feature | Beschreibung |
 |---------|-------------|
 | **Interaktives SVG** | Overlay oben an der Karte, aufklappbar |
-| **Steigungsfarben** | Grün (flach), Gelb (leicht), Orange (mittel), Rot (steil) |
+| **Steigungsfarben** | Grün (flach), Gelb (leicht), Orange (mittel), Rot (steil) — Cargo-spezifisch (4/6/10%) |
 | **Hover-Tooltip** | km-Position, Höhe, Steigung in % + Marker auf der Karte |
-| **Open-Meteo API** | Kostenloses Elevation-API, max 2000 Punkte, Batching mit Cache |
+| **Cargo-Sicherheit** | Lastenrad-Steigungsanalyse: moderate/difficult/extreme Warnungen |
+| **Open-Meteo API** | Kostenloses Elevation-API, max 2000 Punkte, Batching mit Cache + 429-Schutz |
 
 ### Kollaborative Sitzung
 | Feature | Beschreibung |
@@ -280,6 +283,13 @@ Alle Änderungen sind detailliert in der [CHANGELOG.md](./CHANGELOG.md) dokument
 
 | Version | Datum | Typ | Beschreibung |
 |---------|-------|-----|-------------|
+| **0.6.1** | 2026-04-14 | Patch | Overpass FIFO Queue + 429 Rate-Limit Fix (24-Req-Burst eliminiert) |
+| **0.6.0** | 2026-04-14 | Major | Cargo Bike (Lastenrad) Routing: Barriere-Check, Oberflächen, Steigungs-Sicherheit, Griechenland |
+| **0.5.9** | 2026-04-14 | Critical | POI BBox Queries, Turkish Station Expansion, Case-Insensitive Brand-Suche |
+| **0.5.8** | 2026-04-14 | Critical | Elevation 429 Queue-Fix, Overpass Parallel Failover, Deep Audit |
+| **0.5.1** | 2026-04-14 | Minor | Code-Dedup, Parallel Queries, Graceful Degradation |
+| **0.5.0** | 2026-04-14 | Major | POI Aggregator: Multi-Source, Smart Dedup, 50 Local EV Stations (4 Länder) |
+| **0.4.4** | 2026-04-14 | Patch | POI Detail-Expand, Sidebar Overflow Safety |
 | **0.4.3** | 2026-04-14 | Patch | Static-Tar enthält jetzt README.md + CHANGELOG.md, Release-Script gefixt |
 | **0.4.2** | 2026-04-14 | Minor | Code-Review: 3 Critical, 10 High Fixes (Routing, Elevation, Sync, Export) |
 | **0.4.1** | 2026-04-14 | Patch | MapView TDZ-Crash Fix — Production White-Screen behoben |

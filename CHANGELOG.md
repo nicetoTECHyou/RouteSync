@@ -10,6 +10,47 @@ Alle Änderungen sind chronologisch dokumentiert. Versionsnummern folgen [Semant
 
 ---
 
+## [0.9.0] — 2026-04-15
+
+### Major — "The Productivity Layout": Dashboard-Architektur, Kontext-Aktionen, Dynamic Summary
+
+Komplettes UI-Redesign: Weg vom Tab-System, hin zu einem professionellen Drei-Zonen-Dashboard. Alle Kernfunktionen sind jetzt sichtbar ohne Tab-Wechsel — Route, POIs, Session und Chat gleichzeitig erreichbar. Das Design folgt einem "Productivity Layout" mit optimiertem Workflow für die Reiseplanung.
+
+#### Architecture Changes
+- **Tab-System komplett eliminiert**: Die 5-Tab-Sidebar (Route, POIs, Session, Chat, Export) ist Geschichte. Stattdessen gibt es drei Zonen: Header, linke Sidebar, rechte Sidebar.
+- **Drei-Zonen-Dashboard**: `DashboardLayout` ersetzt die alte Sidebar. Linke Sidebar (340px) für Route-Konfiguration, rechte Sidebar (320px) für POI-Suche und Analyse, Center für die Karte.
+- **Neu: `src/components/dashboard/DashboardLayout.tsx`**: Haupt-Layout-Wrapper mit Header + zwei kollabierbaren Sidebars. Toggle-Buttons erscheinen wenn eine Sidebar geschlossen ist.
+- **Neu: `src/components/dashboard/HeaderBar.tsx`**: 48px Header-Leiste mit RS-Logo + Versionsbadge, 8 POI-Category-Chips (inline, klickbar), Kartenstil-Switcher (5 Emoji-Buttons), Session-Code-Badge, Teilnehmerzahl, Verbindungsindikator und Settings-Icon.
+- **Neu: `src/components/dashboard/LeftSidebar.tsx`**: Wrapper um den bestehenden `RoutePanel` — beinhält Start/Via/Ziel-Eingaben, Profil-Selector, Wegpunkt-Liste, Alternativrouten.
+- **Neu: `src/components/dashboard/RightSidebar.tsx`**: Kombiniert dynamische Routenübersicht (Distanz, Steigung, Gefälle, Dauer) mit dem bestehenden `POIPanel` — POI-Suche, -Kategorien, -Radius und -Ergebnisse.
+- **Neu: `src/components/dashboard/SettingsPanel.tsx`**: Slide-Over-Panel von rechts (380px) mit 4 Tabs: Sitzung (SessionPanel), Chat (ChatPanel), Export (ExportPanel), Karte (Terrain 3D, Hillshade, Kompass, Layer-Visibility). Schließt per Escape-Taste oder Klick außerhalb.
+
+#### New Features
+- **Dynamic Summary Bar**: Sticky-Leiste in der rechten Sidebar die permanent Distanz, Gesamthöhenmeter (↑/↓), ETA und Dauer anzeigt sobald eine Route berechnet ist.
+- **POI Category Chips im Header**: 8 Hauptkategorien (Ladesäule, Restaurant, Café, Krankenhaus, Apotheke, Trinkwasser, Fahrradwerkstatt, Camping) als inline-klickbare Chips in der Header-Leiste. Aktivierung/deaktivierung ohne Seitenwechsel.
+- **Kartenstil-Switcher im Header**: Kompakte Emoji-Buttons (🗺️🌙🛰️⛰️🌄) direkt in der Header-Leiste — kein Extra-Menü nötig.
+- **Kollabierbare Sidebars**: Beide Sidebars können per Button ein-/ausgeklappt werden. Toggle-Buttons erscheinen am Rand der Karte wenn eine Sidebar geschlossen ist. Maximale Kartenfläche wenn beide Sidebars eingeklappt sind.
+- **Contextual Action: "Hier Ladepunkte suchen"**: Rechtsklick auf der Karte zeigt jetzt "⚡ Hier Ladepunkte suchen" — fliegt zum Klickpunkt, aktiviert 'charging'-Kategorie, startet POI-Suche (10km Radius).
+- **Contextual Action: "Umleitung planen"**: Rechtsklick auf der Karte zeigt jetzt "🔄 Umleitung planen" — fügt Via-Wegpunkt an Klickposition hinzu mit Reverse-Geocoding für den Namen.
+- **Map Settings in SettingsPanel**: Terrain 3D, Hillshade, Sonnenaufgangs-Kompass und Layer-Visibility (Route, Alt-Routen, POIs, Wegpunkte) als Toggle-Switches im Settings-Panel organisiert.
+
+#### Geänderte Dateien
+- `src/app/page.tsx` — Dashboard-Layout statt Sidebar
+- `src/components/dashboard/DashboardLayout.tsx` — NEU: Drei-Zonen-Layout
+- `src/components/dashboard/HeaderBar.tsx` — NEU: Header mit POI-Chips + Kartenstil + Session
+- `src/components/dashboard/LeftSidebar.tsx` — NEU: Route-Konfiguration
+- `src/components/dashboard/RightSidebar.tsx` — NEU: POI + Dynamic Summary
+- `src/components/dashboard/SettingsPanel.tsx` — NEU: Settings Slide-Over
+- `src/components/map/MapView.tsx` — 2 neue Kontext-Menü-Einträge
+- `VERSION` — 0.9.0
+- `package.json` — 0.9.0
+- `src/components/sidebar/Sidebar.tsx` — 0.9.0 (Fallback, noch vorhanden aber nicht mehr aktiv genutzt)
+- `src/lib/export.ts` — 0.9.0
+- `src/lib/geocode.ts` — 0.9.0
+- `README.md` — v0.9.0 Badge, Versionshistorie
+
+---
+
 ## [0.8.1] — 2026-04-15
 
 ### Patch — Center-Query Tile-Cache-Integration, Center-Radius-Filter, Brand-Regex-Konsolidierung, Result-Limit

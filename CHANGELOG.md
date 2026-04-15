@@ -16,31 +16,35 @@ Alle Änderungen sind chronologisch dokumentiert. Versionsnummern folgen [Semant
 
 Klick auf einen POI-Cluster führte zu einem fatalen Absturz: `Cannot read properties of null (reading '0')` in MapLibre `_calcMatrices`, gefolgt von Hunderten `Invalid LngLat object: (NaN, NaN)` Errors bei jeder Mausbewegung. Die Karte wurde danach komplett unbrauchbar. Ursache war die Supercluster 8.0.1 Bibliothek die `getClusters()` für jegliche Eingabe 0 Ergebnisse zurückgab — komplett defekt. Zusätzlich feuerte `style.load` 3x beim Initial-Laden, was POI-Layer dreimal neu erstellte.
 
-#### Critical Fixes
-- **P1: Supercluster 8.0.1 komplett defekt — ersetzt durch native MapLibre Clustering**: `supercluster.getClusters()` returnierte 0 Ergebnisse für jede Eingabe, jeden Zoom-Level, jeden Parameter (radius, minPoints, maxZoom). Auch das einfachste Beispiel aus der Doku mit 3 POIs produzierte 0 Cluster. Die Bibliothek ist unbrauchbar.
-  - **Fix**: Kompletter Rewrite von `poi-cluster.ts` auf MapLibre's native GeoJSON Clustering (`cluster: true` auf Source). Neue Funktionen: `poisToGeoJSON()`, `addPOIClusterLayersToMap()`, `updatePOISourceData()`. 4 Layer: Cluster-Circle, Cluster-Count, Individual-Circle, Individual-Symbol. `clusterMaxZoom: 14`, `clusterRadius: 60`, `clusterMinPoints: 2`.
-- **P2: NaN in easeTo() korruptierte MapLibre Transform-Matrix**: Nach dem Style-Wechsel wurden POI-Layer neu erstellt. Der alte `cluster_id` wurde stale. `getClusterExpansionZoom()` returnierte `NaN` — aber `NaN != null` ist `true`, also passierte der Guard. `easeTo({ zoom: NaN })` rief `_calcMatrices` auf mit korrupten Werten → Null-Pointer. Danach produzierte JEDER `mousemove` (unproject) `(NaN, NaN)`.
-  - **Fix**: `getClusterExpansionZoom()` in `poi-cluster.ts`: `Number.isFinite()` Guard auf Return-Wert. Cluster-Click-Handler in `MapView.tsx`: Validierung von `expansionZoom`, `lng`, und `lat` mit `Number.isFinite()`. `easeTo` in `try/catch`, Zoom auf `maxZoom 22` geclampt.
-- **P3: style.load Event feuerte 3x beim Initial-Laden**: MapLibre feuert `style.load` mehrfach (initial load + style transition + intern). Jedes Mal wurden POI-Layer entfernt und neu erstellt → `[POI Cluster] All layers added successfully` erschien 3x im Log. Stale `cluster_id`s führten zu NaN im Click-Handler.
-  - **Fix**: `style.load` Handler mit `queueMicrotask` Debounce — schnelle aufeinanderfolgende Events werden zu einem einzigen Re-Init-Zyklus zusammengefasst.
-- **P4: `getClusterLeaves()` Return-Typ inkorrekt**: MapLibre's `GeoJSONSource.getClusterLeaves()` returniert ein `Promise`, wurde aber als synchrones `Feature[]` typisiert.
-  - **Fix**: Return-Typ auf `Promise<GeoJSON.Feature[]>` korrigiert, Fallbacks auf `Promise.resolve([])`.
-- **P5: `MapboxGeoJSONFeature` existiert nicht in MapLibre**: Typ wurde umbenannt zu `MapGeoJSONFeature`.
-  - **Fix**: Type-Alias korrigiert.
+## [1.4.0] — 2026-04-16
 
-#### Dependency Changes
-- **Entfernt**: `supercluster ^8.0.1` aus `package.json` (komplett defekt, ersetzt durch native MapLibre Clustering)
+### Minor — GitHub POI-Datenbank, POI-Info-Verbesserung, Tile-Generator
+
+POI-Popups zeigten für viele Ladesäulen keine Details obwohl OSM-Daten vorhanden waren. Ursache: Der Formatter zeigte nur eine kuratierte Liste bekannter Tags — alle anderen OSM-Tags wurden ignoriert. Zusätzlich: Neue GitHub-gehostete POI-Datenbank als Zwischenschicht zwischen Tile-Cache und Overpass für sofortige Ergebnisse ohne Rate-Limiting. Bulk-Tile-Generator für 19 Kategorien und Südosteuropa+Türkei Abdeckung.
+
+#### New Features
+- **GitHub POI-Datenbank (Phase 0.5)**: Neue `src/lib/poi-github.ts` — lädt vor-generierte POI-Tiles von einem GitHub-Repo via jsDelivr CDN. Wird als Phase 0.5 zwischen IndexedDB-Cache und Overpass eingesetzt. Bei der ersten Suche in einer Region ohne IndexedDB-Cache liefert GitHub die Tiles in 1-2s statt der üblichen 60-120s Overpass-Wartezeit. Parallel-Fetching mit max 4 gleichzeitigen Requests, 30min Manifest-Cache.
+- **"Weitere OSM-Daten"-Fallback**: Popup und Sidebar zeigen jetzt ALLE OSM-Tags die nicht explizit formatiert wurden. Vorher wurden unbekannte Tags komplett ignoriert.
+- **OSM-Daten/Bearbeiten-Links**: Jeder POI-Popup zeigt Links zu openstreetmap.org — "Daten anzeigen" und "Bearbeiten" (iD Editor).
+- **Erweiterte Ladesäulen-Infos**: Neue Felder: Marke (brand), Netzwerk (network), Referenz (ref), Betriebsstatus, Parkgebühr, Beschreibung, E-Mail, Voltage/Current pro Socket.
+- **Bulk POI Tile Generator**: `scripts/generate-poi-database.ts` — 19 Kategorien, 2x2 Grad-Chunks, Endpoint-Rotation.
+- **RouteSync-POI-Data Repo**: 48 Tiles (74.674 POIs), Manifest, README, GitHub Actions Workflow als `.tar.gz` (3.1 MB).
+
+#### Bug Fixes
+- **POIs ohne angezeigte Details**: formatPOIDetails und POIDetailExpanded ignorierten unbekannte OSM-Tags. Fix: Raw-Tags-Fallback + erweiterte Charging-Felder.
+- **Sidebar leere Detail-Anzeige**: Bei POIs mit nur exotischen OSM-Tags wurde "Keine weiteren Details" angezeigt. Fix: Raw-Tags-Fallback zeigt immer remaining Tags.
 
 #### Geänderte Dateien
-- `src/lib/poi-cluster.ts` — Kompletter Rewrite: Native MapLibre Clustering, NaN-Guard, Typ-Fixes
-- `src/components/map/MapView.tsx` — style.load Dedup, Cluster-Click NaN-Guard, try/catch easeTo
-- `package.json` — supercluster entfernt, 1.3.5
-- `VERSION` — 1.3.5
-- `src/components/sidebar/Sidebar.tsx` — 1.3.5
-- `src/components/dashboard/HeaderBar.tsx` — 1.3.5
-- `src/lib/export.ts` — 1.3.5
-- `src/lib/geocode.ts` — 1.3.5
-- `CHANGELOG.md` — v1.3.5 Eintrag
+- `src/lib/poi-github.ts` — NEU: GitHub Tile-Source
+- `src/lib/poi-aggregator.ts` — Phase 0.5 Integration, githubTiles Stat
+- `src/lib/poiFormatter.ts` — Raw-Tags, OSM-Links, Extended Charging-Fields
+- `src/components/sidebar/POIPanel.tsx` — Raw-Tags, OSM-Links, Extended Charging-Fields, GitHub Stats
+- `scripts/generate-poi-database.ts` — NEU: Bulk Tile Generator
+- `scripts/generate-manifest.ts` — NEU: Manifest Generator
+- `scripts/run-poi-batch.sh` — NEU: Batch Runner
+- `RouteSync-POI-Data/` — NEU: Repo-Paket (tar.gz)
+- `VERSION` — 1.4.0
+- `CHANGELOG.md` — v1.4.0 Eintrag
 
 ---
 

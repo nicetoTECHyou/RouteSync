@@ -10,27 +10,43 @@ Alle Änderungen sind chronologisch dokumentiert. Versionsnummern folgen [Semant
 
 ---
 
-## [1.3.2] — 2026-04-15
+## [1.3.3] — 2026-04-15
 
-### Patch — Elevation-Profile Fix & POI Layer-Self-Healing
+### Patch — POI Rendering Fix: sourcedata Endlosschleife entfernt
 
-Höhendaten zeigten dauerhaft "Laden" statt das Diagramm anzuzeigen. POIs wurden weiterhin nicht auf der Karte gerendert trotz v1.3.0/v1.3.1 Fixes. Zwei unabhängige Root-Cause Bugs in der Rendering-Pipeline.
+POIs wurden weiterhin nicht auf der Karte angezeigt obwohl v1.3.0-v1.3.2 die Rendering-Pipeline mehrfach überarbeiteten. Der `sourcedata`-Event-Handler im POI Data-Update useEffect erzeugte eine **Endlosschleife**: `setData()` → `sourcedata` Event → `updateClusters()` → `setData()` → `sourcedata` → ... Diese Schleife verhinderte dass MapLibre die POI-Daten korrekt rendern konnte.
 
 #### Critical Fixes
-- **P1: attemptedKeyRef nicht in Cleanup zurückgesetzt (ElevationProfile.tsx)**: Der Debounce-Ref `attemptedKeyRef` wurde im useEffect-Cleanup NICHT zurückgesetzt. Wenn die Route-Geometry sich änderte (neue Array-Referenz, gleiche Daten — z.B. nach Alt-Routen-Berechnung), wurde der Cleanup ausgeführt (Timer gecanceld, Fetch aborted), aber `attemptedKeyRef.current` behielt den alten Key. Der nächste Effect-Run prüfte `attemptedKeyRef.current === fetchKey` → TRUE → Fetch komplett übersprungen. Resultat: `profile` blieb leer → "Laden" für immer.
-  - **Fix**: `attemptedKeyRef.current = ''` im Cleanup-Return. Nach jedem Abort/Geometry-Change startet der Fetch neu.
-- **P2: addPOIClusterLayersToMap checkt nur Source nicht Layer (poi-cluster.ts)**: Die Funktion prüfte nur `if (map.getSource(CLUSTER_SOURCE_ID)) return;`. Wenn durch eine Race-Condition (Style-Load vs. React Batch-Update) der GeoJSON-Source existierte aber die 4 Layer fehlten, gab die Funktion frühzeitig zurück — ohne die Layer neu zu erstellen. POIs waren in der Pipeline aber unsichtbar auf der Karte.
-  - **Fix**: Prüft jetzt sowohl Source ALS AUCH kritischen Layer (`CLUSTER_CIRCLE_ID`). Bei partiellern Zustand: Source wird entfernt, dann komplett neu aufgebaut. Zusätzlich: alle 4 `map.addLayer()` Aufrufe mit try/catch wrapped — wenn ein Layer fehlschlägt, werden die restlichen trotzdem hinzugefügt statt komplett abzubrechen. Console-Error Logging für fehlgeschlagene Layer.
+- **P1: sourcedata Event-Handler erzeugte Endlosschleife (MapView.tsx)**: Der `onSourceData`-Callback lauschte auf `sourcedata`-Events der POI-Source und rief bei jedem Event `updateClusters()` auf. Da `updateClusters()` selbst `setData()` aufruft, wurde das `sourcedata`-Event sofort wieder gefeuert — unendliche Rekursion. MapLibre konnte die Daten nie stabil rendern weil sie ständig überschrieben wurden.
+  - **Fix**: `onSourceData`-Handler komplett entfernt. Die Cluster werden bereits bei: Initial-Ladung (`updateClusters()` direkt aufgerufen), `moveend`/`zoomend` (Map-Bewegung), und `styleLoadCount`-Änderung (Style-Wechsel) aktualisiert. Kein `sourcedata`-Handler nötig.
 
 #### Geänderte Dateien
-- `src/components/map/ElevationProfile.tsx` — attemptedKeyRef Cleanup-Fix
-- `src/lib/poi-cluster.ts` — Source+Layer Check, try/catch, Partial-State-Recovery
-- `VERSION` — 1.3.2
-- `package.json` — 1.3.2
-- `src/components/sidebar/Sidebar.tsx` — 1.3.2
-- `src/components/dashboard/HeaderBar.tsx` — 1.3.2
-- `src/lib/export.ts` — 1.3.2
-- `src/lib/geocode.ts` — 1.3.2
+- `src/components/map/MapView.tsx` — sourcedata-Handler entfernt, Endlosschleife behoben
+- `VERSION` — 1.3.3
+- `package.json` — 1.3.3
+- `src/components/sidebar/Sidebar.tsx` — 1.3.3
+- `src/components/dashboard/HeaderBar.tsx` — 1.3.3
+- `src/lib/export.ts` — 1.3.3
+- `src/lib/geocode.ts` — 1.3.3
+- `CHANGELOG.md` — v1.3.3 Eintrag
+
+---
+
+## [1.3.2] — 2026-04-15
+
+### Patch — Elevation "Laden" Fix & POI Lifecycle-Cleanup Race-Condition
+
+Höhendaten zeigten dauerhaft "Laden" statt das Diagramm anzuzeigen. POIs wurden weiterhin nicht auf der Karte gerendert trotz v1.3.0/v1.3.1 Fixes. Zwei unabhängige Root-Cause Bugs in React Effect-Lifecycle.
+
+#### Critical Fixes
+- **P1: geometry im useEffect-Dependency-Array verhinderte Fetch (ElevationProfile.tsx)**: Der `useEffect` hatte `[fetchKey, geometry, ...]` als Dependencies. Die `geometry` ist ein Array aus dem RouteStore — bei JEDEM Store-Update (PeerSync, Waypoint-Änderung, Alt-Routen-Berechnung) erhält sie eine neue Array-Referenz, auch bei identischen Daten. Der Effect-Cleanup wurde ausgeführt → 800ms-Debounce gecancelt → `attemptedKeyRef` zurückgesetzt → neuer 800ms-Debounce gestartet. Bei häufigen Store-Updates wurde der Debounce PERMANENT zurückgesetzt — der Fetch wurde nie ausgelöst. Resultat: `setLoading(true)` wurde nie aufgerufen, `profile` blieb leer → "Laden" für immer.
+  - **Fix**: `geometry` aus dem Dependency-Array entfernt. Stattdessen `geometryRef = useRef()` der immer die aktuelle geometry-Referenz hält. Der Effect läuft nur noch bei `fetchKey`-Änderungen (neue Route). Die `attemptedKeyRef`-Logik bleibt unverändert.
+- **P2: POI Layer Lifecycle Cleanup zerstörte Source beim Style-Reload (MapView.tsx)**: Der "POI Layer Lifecycle" Effect hatte `clearPOILayers(map)` im Cleanup-Return. Bei JEDEM `styleLoadCount`-Wechsel (Style-Change) wurde der Cleanup ausgeführt: Source + 4 Layer GELÖSCHT. Danach lief der "POI Data Update" Effect und versuchte auf den gelöschten Source zuzugreifen. `updateClusters()` hatte zwar Self-Healing, aber der `moveend`/`zoomend`-Listener-Registration und die Initialdaten-Setzung hatten eine Race-Condition mit dem Lifecycle-Effect-Body. Die Listener registrierten sich auf den gelöschten Source, und beim ersten Pan/Zoom passierte nichts — POIs verschwanden nach dem ersten Style-Wechsel dauerhaft.
+  - **Fix**: `clearPOILayers(map)` wird nur noch aufgerufen wenn `showPOIMarkers` explizit auf `false` gesetzt wird (User-Toggle). Bei Style-Reloads (`styleLoadCount`-Änderung) werden DOM-Marker entfernt, aber Source und Layer bleiben intakt. Der Data-Update Effect erstellt Source/Layer selbst wenn nötig (Self-Healing bei Effect-Start). Zusätzlich: `addPOIClusterLayersToMap(map)` am Anfang des Data-Update Effects falls Source fehlt.
+
+#### Geänderte Dateien
+- `src/components/map/ElevationProfile.tsx` — geometry aus Dependency-Array, geometryRef als Ersatz
+- `src/components/map/MapView.tsx` — POI Lifecycle Cleanup nur bei Toggle-OFF, Data Update Self-Healing
 - `CHANGELOG.md` — v1.3.2 Eintrag
 
 ---

@@ -6,7 +6,7 @@
 
 **Type 2 AC Charging — 1m Width Verification — Southeast Europe**
 
-**RouteSync v1.3.2**
+**RouteSync v1.5.3**
 
 <br>
 
@@ -15,7 +15,7 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 [![MapLibre](https://img.shields.io/badge/MapLibre_GL-5.22-1AAC71?logo=maplibre&logoColor=white)](https://maplibre.org)
 [![Zustand](https://img.shields.io/badge/Zustand-5-764ABC)](https://github.com/pmndrs/zustand)
-[![Version](https://img.shields.io/badge/Version-1.3.2-10B981)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-1.5.3-10B981)](./CHANGELOG.md)
 
 <br>
 
@@ -246,7 +246,17 @@ Alle Änderungen sind detailliert in der [CHANGELOG.md](./CHANGELOG.md) dokument
 
 | Version | Datum | Typ | Beschreibung |
 |---------|-------|-----|-------------|
+| **1.5.3** | 2026-04-16 | Patch | Release-Tar Struktur korrigiert: source.tar + static.tar + VERSION |
+| **1.5.2** | 2026-04-16 | Patch | Dokumentation-Refresh: Alle Versionen auf 1.5.2, SDD aktualisiert |
+| **1.5.1** | 2026-04-16 | Patch | Release-Tar Struktur-Fix: Source/Static-Tar + VERSION |
+| **1.5.0** | 2026-04-16 | Minor | System-Audit, POI-Popup, Phase 0.5 Caching, 6 Bugfixes |
+| **1.4.1** | 2026-04-16 | Patch | POI-Suche Crash: uncachedTileIds Scope-Error |
+| **1.4.0** | 2026-04-16 | Minor | GitHub POI-Datenbank, Tile-Generator, POI-Info-Verbesserung |
+| **1.3.5** | 2026-04-16 | Patch | Cluster-Click Crash Fix, NaN-Guard, style.load Dedup |
+| **1.3.4** | 2026-04-15 | Patch | Sidebar Clipping Fix, POI Rendering Robustheit |
+| **1.3.3** | 2026-04-15 | Patch | POI sourcedata Endlosschleife entfernt |
 | **1.3.2** | 2026-04-15 | Patch | Elevation-Profile Fix, POI Layer-Self-Healing |
+| **1.3.1** | 2026-04-15 | Patch | POI Rendering Pipeline: StyleLoadCount, Self-Healing, Filter |
 | **1.3.0** | 2026-04-15 | Major | POI Rendering Fix: Layer-Data Separation, High-Zoom Cluster-Expand |
 | **1.2.2** | 2026-04-15 | Patch | Dreistufige POI-Suchpriorität: Standort > Route > Center |
 | **1.2.1** | 2026-04-15 | Patch | MapLibre CSS-Var Paint-Property Fix (POI-Labels) |

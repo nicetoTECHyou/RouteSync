@@ -10,6 +10,104 @@ Alle Änderungen sind chronologisch dokumentiert. Versionsnummern folgen [Semant
 
 ---
 
+## [1.5.3] — 2026-04-16
+
+### Patch — Release-Tar Struktur korrigiert: source.tar + static.tar + VERSION (v1.4.1 Schema)
+
+Das Release-Tar v1.5.2 enthielt fälschlicherweise den flachen Sourcecode (262 Dateien inkl. dist/, src/, README, CHANGELOG) statt der v1.4.1 Release-Struktur mit separaten source.tar und static.tar. Der Release-Script `scripts/release.sh` erzeugt korrekt das Nested-Tar-Format, aber eine zweite Tar-Datei wurde parallel mit flacher Struktur in den Download gelegt und an den User ausgeliefert. Dreifacher Fix: Version auf 1.5.3, CHANGELOG korrigiert, sauberes Release-Tar aus dem release.sh Script.
+
+#### Bug Fixes
+- **P1: Release-Tar enthielt flachen Sourcecode statt source.tar/static.tar/VERSION**: Die Datei `RouteSync-1.5.2.tar` (im Download-Ordner) enthielt 262 Dateien (vollständiger Quellcode + dist/) direkt entpackbar — nicht das in der README und SDD definierte Format mit separaten inneren Tars. Ursache: Nebeneinander von zwei verschiedenen Tar-Dateien im Download. Das `scripts/release.sh` Script erzeugt die korrekte Struktur, aber eine ältere flache Datei wurde ausgeliefert.
+  - **Fix**: Alte flache Tar-Dateien entfernt. Release-Tar exklusiv über `scripts/release.sh` gebaut. Struktur verifiziert gegen `upload/RouteSync-v1.4.1.tar` (Referenz).
+- **P2: CHANGELOG v1.5.1 beschrieb falsch die Tar-Struktur**: Der v1.5.1 Eintrag behauptete "Flat-Tar statt Nested-Tar" — das war inkorrekt. Die v1.4.1 Referenz zeigt klar source.tar + static.tar + VERSION. Die Beschreibung wurde korrigiert.
+  - **Fix**: CHANGELOG-Einträge v1.5.1 und v1.5.2 korrigiert.
+- **P3: README.md Version und Versionshistorie veraltet**: README zeigte v1.3.2 statt v1.5.2.
+  - **Fix**: README auf v1.5.3 aktualisiert, alle Versionen 1.3.0–1.5.3 in Historie-Tabelle.
+
+#### Geänderte Dateien
+- `VERSION` — 1.5.3
+- `package.json` — 1.5.3
+- `CHANGELOG.md` — v1.5.3 Eintrag + Korrekturen an v1.5.1/v1.5.2
+- `README.md` — v1.5.3 Badge + Versionshistorie
+- `download/RouteSync-v1.5.3.tar` — NEU: Korrektes Release-Tar (source.tar + static.tar + VERSION)
+
+---
+
+## [1.5.2] — 2026-04-16
+
+### Patch — Dokumentation-Refresh: Alle Versionen auf 1.5.2, SDD aktualisiert
+
+Umfassendes Update aller Dokumente und Build-Versionsnummern auf den aktuellen Stand v1.5.2. Die SDD lag auf v1.3.4 und enthielt veraltete Beschreibungen die viele Bugfixes und Features seitdem nicht abdeckten. Alle Inline-Fallback-Versionen in den 6 Version-Dateien waren teilweise auf 1.3.5 stehen geblieben und stimmten nicht mit der tatsächlichen VERSION-Datei überein.
+
+#### Bug Fixes
+- **P1: Inline-Fallback-Versionen inkonsistent (HeaderBar, Sidebar, export, geocode)**: Die `APP_VERSION` / `VERSION` / `USER_AGENT` Fallback-Werte in HeaderBar.tsx, Sidebar.tsx, export.ts und geocode.ts zeigten `'1.3.5'` statt der aktuellen Version. Wenn `NEXT_PUBLIC_APP_VERSION` nicht gesetzt war (z.B. bei `next dev` ohne .env), wurde im UI und in Export-Dateien die falsche Version angezeigt.
+  - **Fix**: Alle 4 Dateien auf Fallback `'1.5.2'` aktualisiert. VERSION-Datei und package.json ebenfalls auf 1.5.2.
+- **P2: SDD (Software Design Document) veraltet auf v1.3.4**: Die SDD beschrieb den Stand von v1.3.4 und fehlte alle Änderungen aus v1.3.5 bis v1.5.1 — darunter der GitHub POI-Datenbank Phase 0.5, die 6 Bugfixes aus v1.5.0 (Universal POI-Details, contact:* Sub-Tags, Dedup-Fix, IndexedDB Caching, Overpass-Skip, AbortSignal), den Release-Tar Fix, und die Marker-Crash-Behebung. Texte referenzierten veraltete Architektur-Entscheidungen.
+  - **Fix**: SDD komplett auf v1.5.2 neu erstellt mit aktualisierten Texten, neuen Features, und korrigierter Architektur-Beschreibung.
+- **P3: POI-README referenzierte veraltete Version**: `RouteSync-POI-Data/README.md` zeigte "Generated for RouteSync v1.5.0".
+  - **Fix**: Aktualisiert auf v1.5.2.
+
+#### Geänderte Dateien
+- `VERSION` — 1.5.2
+- `package.json` — 1.5.2
+- `src/components/dashboard/HeaderBar.tsx` — Fallback 1.5.2
+- `src/components/sidebar/Sidebar.tsx` — Fallback 1.5.2
+- `src/lib/export.ts` — Fallback 1.5.2
+- `src/lib/geocode.ts` — Fallback 1.5.2
+- `CHANGELOG.md` — v1.5.2 Eintrag
+- `RouteSync-POI-Data/README.md` — Version 1.5.2
+- `upload/RouteSync_SDD_v1.5.2.pdf` — NEU: Aktualisierte SDD (ersetzt v1.3.4)
+
+---
+
+## [1.5.1] — 2026-04-16
+
+### Patch — Release-Tar Struktur-Fix: Flat-Tar statt Nested-Tar
+
+Das Release-Tar (`RouteSync-1.5.0.tar`) enthielt verschachtelte Tars (`source.tar` + `static.tar`) statt der eigentlichen Dateien. README.md, CHANGELOG.md, VERSION, package.json, src/ und dist/ waren nicht direkt im Tar erreichbar — nur über ein separates Entpacken der inneren Tars. Das entsprach nicht der SDD-Spezifikation und machte das Release unbrauchbar.
+
+#### Bug Fixes
+- **P1: Release-Tar enthielt nested Tars statt flacher Dateistruktur**: Der `tar`-Kommando erstellte ein äußeres Tar mit drei Einträgen: `RouteSync-1.5.0/VERSION`, `RouteSync-1.5.0/RouteSync-1.5.0-source.tar` (Quellcode, dist excluded) und `RouteSync-1.5.0/RouteSync-1.5.0-static.tar` (nur dist/). Benutzer mussten das äußere Tar UND dann beide inneren Tars entpacken — umständlich und fehleranfällig. README, CHANGELOG und andere Root-Dateien fehlten komplett im entpackten Ergebnis.
+  - **Fix**: Kompletter Neubau des Release-Tar-Kommandos. Einzelner `tar cf` mit `--transform="s,^\./,RouteSync-VERSION/,"` der ALLE Projektdateien (src/, dist/, README.md, CHANGELOG.md, VERSION, package.json, etc.) direkt unter `RouteSync-VERSION/` ablegt. Ausgeschlossen: node_modules, .next, .git, download, skills, .env, worklog.md, upload. Ergebnis: Ein einziges flaches Tar das mit `tar xf` sofort alle Dateien zugänglich macht.
+
+#### Geänderte Dateien
+- `VERSION` — 1.5.1
+- `package.json` — 1.5.1
+- `CHANGELOG.md` — v1.5.1 Eintrag
+- `download/RouteSync-1.5.1.tar` — neues flaches Release-Tar (ersetzt broken 1.5.0.tar)
+
+---
+
+## [1.5.0] — 2026-04-16
+
+### Minor — System-Audit, POI-Popup-Überarbeitung, Phase 0.5 Caching & Performance
+
+Umfassendes System-Audit der gesamten Codebase mit 6 Bugfixes. POI-Popups zeigen jetzt für ALLE Kategorien (nur Ladesäulen) vollständige OSM-Daten an — vorher fehlten contact:*, wheelchair, internet_access und weitere Universal-Felder. Phase 0.5 (GitHub POI-Datenbank) wurde massiv verbessert: GitHub-Ergebnisse werden jetzt in IndexedDB gecacht und Overpass wird komplett übersprungen wenn GitHub alle benötigten Tiles abdeckt.
+
+#### Bug Fixes
+- **P1: POI-Popup fehlte Universal-Details für alle Kategorien (poiFormatter.ts)**: Map-Popups zeigten kategorie-spezifische Felder (Anschlüsse, Bezahlung für Ladesäulen; Küche für Restaurants etc.), aber Universal-Felder wie Rollstuhl-Zugänglichkeit, WC, Internet, Rauchen, Hunde fehlten komplett für alle Kategorien außer Ladesäulen. Wikipedia/Wikidata-Links fehlten für alle Kategorien.
+  - **Fix**: Neuer "Universal Details"-Block nach den kategorie-spezifischen Sektionen. Zeigt: wheelchair, toilets, toilets:wheelchair, internet_access, smoking, dogs. Wikipedia/Wikidata-Links für ALLE Kategorien (inklusive Ladesäulen).
+- **P2: POI-Popup fehlte contact:* Sub-Tags (poiFormatter.ts)**: Europäische OSM-Einträge verwenden oft `contact:phone`, `contact:mobile` und `contact:website` statt der top-level Tags. Der Popup-Formatter ignorierte diese komplett — Telefonnummern und Websites blieben unsichtbar.
+  - **Fix**: `contact:phone` und `contact:mobile` für ALLE Kategorien hinzugefügt (als "Tel. 2" / "Mobil"). `contact:website` als zusätzliche Quelle für Website-Links bei Ladesäulen und allen anderen Kategorien.
+- **P3: Dedup löschte amenity-Tag aus merged POIs (poi-dedup.ts)**: Bei der Zusammenführung von POIs aus verschiedenen Quellen wurde der `amenity`-Tag aus dem Ergebnis gelöscht. Dadurch fehlte die Klassifikation im Raw-Tags-Fallback.
+  - **Fix**: `'amenity'` aus der `internalKeys`-Löschliste entfernt. Die `amenity`-Klassifikation bleibt erhalten.
+- **P4: GitHub POI-Ergebnisse nicht in IndexedDB gecacht (poi-aggregator.ts)**: Phase 0.5 lud POI-Daten von GitHub, aber die Ergebnisse wurden NICHT in den IndexedDB Tile-Cache geschrieben. Bei jeder erneuten Suche wurden dieselben GitHub-Tiles neu geladen — CDN-Bandbreite verschwendet, keine Persistenz.
+  - **Fix**: GitHub-Elemente werden nach `processElements()` auch zu `allOverpassElements` hinzugefügt. Phase 1.5 (`cacheOverpassResults`) cacht jetzt auch GitHub-Daten in IndexedDB.
+- **P5: Overpass lief trotz vollständiger GitHub-Abdeckung (poi-aggregator.ts)**: Phase 0.5 aktualisierte `allTilesCached` nicht. Auch wenn GitHub ALLE fehlenden Tiles lieferte, rannte Phase 1 (Overpass) trotzdem — Rate-Limit-Verschwendung.
+  - **Fix**: Nach erfolgreichem GitHub-Fetch wird `allTilesCached = true` gesetzt. Phase 1 (Overpass) wird komplett übersprungen wenn GitHub alle Tiles abgedeckt hat.
+- **P6: Unused Type Import + fehlender AbortSignal in Phase 0.5**: `GitHubTileManifest` wurde importiert aber nie verwendet. Phase 0.5 war nicht via AbortSignal abbrechbar.
+  - **Fix**: Unused Import entfernt. AbortSignal-Check vor Phase 0.5 hinzugefügt.
+
+#### Geänderte Dateien
+- `src/lib/poiFormatter.ts` — Universal Details, contact:* Sub-Tags, Wikipedia/Wikidata für alle Kategorien
+- `src/lib/poi-dedup.ts` — amenity-Tag erhalten
+- `src/lib/poi-aggregator.ts` — GitHub→IndexedDB Caching, Overpass-Skip, AbortSignal, Unused Import
+- `VERSION` — 1.5.0
+- `package.json` — 1.5.0
+- `CHANGELOG.md` — v1.5.0 Eintrag
+
+---
+
 ## [1.4.1] — 2026-04-16
 
 ### Patch — POI-Suche Crash: `uncachedTileIds is not defined`

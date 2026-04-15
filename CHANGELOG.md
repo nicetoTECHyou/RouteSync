@@ -10,6 +10,40 @@ Alle Änderungen sind chronologisch dokumentiert. Versionsnummern folgen [Semant
 
 ---
 
+## [1.3.5] — 2026-04-16
+
+### Patch — Cluster-Click Crash Fix: Native MapLibre Clustering, NaN-Guard, style.load Dedup
+
+Klick auf einen POI-Cluster führte zu einem fatalen Absturz: `Cannot read properties of null (reading '0')` in MapLibre `_calcMatrices`, gefolgt von Hunderten `Invalid LngLat object: (NaN, NaN)` Errors bei jeder Mausbewegung. Die Karte wurde danach komplett unbrauchbar. Ursache war die Supercluster 8.0.1 Bibliothek die `getClusters()` für jegliche Eingabe 0 Ergebnisse zurückgab — komplett defekt. Zusätzlich feuerte `style.load` 3x beim Initial-Laden, was POI-Layer dreimal neu erstellte.
+
+#### Critical Fixes
+- **P1: Supercluster 8.0.1 komplett defekt — ersetzt durch native MapLibre Clustering**: `supercluster.getClusters()` returnierte 0 Ergebnisse für jede Eingabe, jeden Zoom-Level, jeden Parameter (radius, minPoints, maxZoom). Auch das einfachste Beispiel aus der Doku mit 3 POIs produzierte 0 Cluster. Die Bibliothek ist unbrauchbar.
+  - **Fix**: Kompletter Rewrite von `poi-cluster.ts` auf MapLibre's native GeoJSON Clustering (`cluster: true` auf Source). Neue Funktionen: `poisToGeoJSON()`, `addPOIClusterLayersToMap()`, `updatePOISourceData()`. 4 Layer: Cluster-Circle, Cluster-Count, Individual-Circle, Individual-Symbol. `clusterMaxZoom: 14`, `clusterRadius: 60`, `clusterMinPoints: 2`.
+- **P2: NaN in easeTo() korruptierte MapLibre Transform-Matrix**: Nach dem Style-Wechsel wurden POI-Layer neu erstellt. Der alte `cluster_id` wurde stale. `getClusterExpansionZoom()` returnierte `NaN` — aber `NaN != null` ist `true`, also passierte der Guard. `easeTo({ zoom: NaN })` rief `_calcMatrices` auf mit korrupten Werten → Null-Pointer. Danach produzierte JEDER `mousemove` (unproject) `(NaN, NaN)`.
+  - **Fix**: `getClusterExpansionZoom()` in `poi-cluster.ts`: `Number.isFinite()` Guard auf Return-Wert. Cluster-Click-Handler in `MapView.tsx`: Validierung von `expansionZoom`, `lng`, und `lat` mit `Number.isFinite()`. `easeTo` in `try/catch`, Zoom auf `maxZoom 22` geclampt.
+- **P3: style.load Event feuerte 3x beim Initial-Laden**: MapLibre feuert `style.load` mehrfach (initial load + style transition + intern). Jedes Mal wurden POI-Layer entfernt und neu erstellt → `[POI Cluster] All layers added successfully` erschien 3x im Log. Stale `cluster_id`s führten zu NaN im Click-Handler.
+  - **Fix**: `style.load` Handler mit `queueMicrotask` Debounce — schnelle aufeinanderfolgende Events werden zu einem einzigen Re-Init-Zyklus zusammengefasst.
+- **P4: `getClusterLeaves()` Return-Typ inkorrekt**: MapLibre's `GeoJSONSource.getClusterLeaves()` returniert ein `Promise`, wurde aber als synchrones `Feature[]` typisiert.
+  - **Fix**: Return-Typ auf `Promise<GeoJSON.Feature[]>` korrigiert, Fallbacks auf `Promise.resolve([])`.
+- **P5: `MapboxGeoJSONFeature` existiert nicht in MapLibre**: Typ wurde umbenannt zu `MapGeoJSONFeature`.
+  - **Fix**: Type-Alias korrigiert.
+
+#### Dependency Changes
+- **Entfernt**: `supercluster ^8.0.1` aus `package.json` (komplett defekt, ersetzt durch native MapLibre Clustering)
+
+#### Geänderte Dateien
+- `src/lib/poi-cluster.ts` — Kompletter Rewrite: Native MapLibre Clustering, NaN-Guard, Typ-Fixes
+- `src/components/map/MapView.tsx` — style.load Dedup, Cluster-Click NaN-Guard, try/catch easeTo
+- `package.json` — supercluster entfernt, 1.3.5
+- `VERSION` — 1.3.5
+- `src/components/sidebar/Sidebar.tsx` — 1.3.5
+- `src/components/dashboard/HeaderBar.tsx` — 1.3.5
+- `src/lib/export.ts` — 1.3.5
+- `src/lib/geocode.ts` — 1.3.5
+- `CHANGELOG.md` — v1.3.5 Eintrag
+
+---
+
 ## [1.3.4] — 2026-04-15
 
 ### Patch — Rechte Sidebar Clipping Fix & POI Rendering Robustheit

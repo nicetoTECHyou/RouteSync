@@ -10,6 +10,24 @@ Alle Änderungen sind chronologisch dokumentiert. Versionsnummern folgen [Semant
 
 ---
 
+## [1.4.1] — 2026-04-16
+
+### Patch — POI-Suche Crash: `uncachedTileIds is not defined`
+
+POI-Suche startete nicht — Console zeigte `ReferenceError: uncachedTileIds is not defined` in `poi-aggregator.ts`. Ursache: Die Variable `uncachedTileIds` wurde mit `const` innerhalb des Phase 0 Tile-Cache Blocks deklariert, war aber außerhalb dieses Blocks in Phase 0.5 (GitHub Tiles) referenziert. Phase 0.5 prüft `uncachedTileIds.length > 0` um zu entscheiden ob GitHub-Tiles geladen werden sollen — bei fehlender Variable kam es zum Crash. Die Tile-Cache-Daten (0 hit, 2 miss) wurden geloggt, dann sofort der Error geworfen.
+
+#### Critical Fixes
+- **P1: `uncachedTileIds` Scope-Error (poi-aggregator.ts)**: `uncachedTileIds` war per `const { ..., uncachedTileIds } = await loadCachedPOIs(...)` deklariert, aber Phase 0.5 (GitHub Tiles) und Phase 1 (Overpass) greifen darauf zu. Bei leerem Tile-Cache-Block (keine Route/Center Tiles) oder wenn der Codepfad Phase 0 übersprang, war die Variable nicht definiert.
+  - **Fix**: `uncachedTileIds` als `let uncachedTileIds: TileId[] = []` vor dem Phase 0 Block deklariert (hoisted). Phase 0 destrukturiert `uncachedTileIds: missIds` und weist `uncachedTileIds = missIds` zu. Phase 0.5 und alle nachfolgenden Phasen greifen sicher auf die hoisted Variable zu.
+
+#### Geänderte Dateien
+- `src/lib/poi-aggregator.ts` — uncachedTileIds hoisted, Destructure Rename
+- `VERSION` — 1.4.1
+- `package.json` — 1.4.1
+- `CHANGELOG.md` — v1.4.1 Eintrag
+
+---
+
 ## [1.3.5] — 2026-04-16
 
 ### Patch — Cluster-Click Crash Fix: Native MapLibre Clustering, NaN-Guard, style.load Dedup

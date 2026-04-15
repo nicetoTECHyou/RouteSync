@@ -10,6 +10,34 @@ Alle Änderungen sind chronologisch dokumentiert. Versionsnummern folgen [Semant
 
 ---
 
+## [1.3.4] — 2026-04-15
+
+### Patch — Rechte Sidebar Clipping Fix & POI Rendering Robustheit
+
+Die rechte Sidebar wurde zunehmend abgeschnitten (Inhalte verschwanden am rechten Rand). POIs erschienen weiterhin nicht zuverlässig auf der Karte trotz v1.3.0-v1.3.3 Rendering-Fixes. Zwei unabhängige Bugs mit unterschiedlichen Root-Causes identifiziert und behoben.
+
+#### Critical Fixes
+- **P1: Rechte Sidebar Content abgeschnitten (DashboardLayout.tsx)**: Der äußere Container der rechten Sidebar hatte `overflow-y-auto overflow-x-hidden`, während das innere `POIPanel`-Komponente eine `ScrollArea` mit `h-full` verwendete. Zwei konkurrierende Scroll-Kontexte führten zu Clipping: Der äußere `overflow-x-hidden` schnitt den Inhalt rechts ab weil die `ScrollArea` internally versuchte zu scrollen während der Parent `overflow-x-hidden` erzwang. Die Breite `w-[320px]` mit `min-w-0` führte zusätzlich dazu dass bei Space-Pressure (z.B. eingeklappte linke Sidebar) die rechte Sidebar schrumpfen konnte.
+  - **Fix**: Äußerer Container auf `overflow-hidden` geändert (nur `ScrollArea` scrollt). `min-w-0` durch `shrink-0` ersetzt — Sidebar behält immer exakt 320px Breite. Gleiche Fix für linke Sidebar (340px) angewendet.
+- **P2: POI getChildren() fehlgeschlagen bei Cluster-Expand (poi-cluster.ts, MapView.tsx)**: `buildClusterGeoJSON()` und `renderPOIIndividualMarkers()` riefen `engine.getChildren(cluster.id as number)` ohne Validierung auf. Wenn `cluster.id` `undefined` oder kein `number` war (z.B. bei Leaf-Features ohne ID), throwed Supercluster einen Error der von try/catch verschluckt wurde — der gesamte Cluster wurde übersprungen, POIs im Cluster verschwanden.
+  - **Fix**: `getChildren()` Aufrufe mit `cluster.id != null && typeof cluster.id === 'number'` Guard versehen. Zusätzlich try/catch mit `console.warn` Logging um zukünftige Fehler sichtbar zu machen.
+- **P3: POI Render Race-Condition bei schnellen Re-Renders (MapView.tsx)**: Der POI Data Update Effect startete `updateClusters()` in einem `requestAnimationFrame` (double-rAF für sicheres Canvas-Paint). Bei schnellen aufeinanderfolgenden `pois`-Änderungen (z.B. Such-Start → leere POIs → Ergebnis-POIs) cancelte der Cleanup des zweiten Effect-Runs den rAF des ersten — aber wenn der zweite rAF nie feuerte (weil der Effect-Body wegen einer anderen Condition early-returned), wurden die POIs nie gerendert.
+  - **Fix**: "Verified Render" Mechanismus hinzugefügt. Nach 300ms wird geprüft ob POI-Features auf der Karte sichtbar sind (`queryRenderedFeatures`). Wenn keine Features gefunden werden obwohl POIs im Store sind, wird `updateClusters()` erzwungen. Der verifyTimer wird im Cleanup korrekt bereinigt.
+
+#### Geänderte Dateien
+- `src/components/dashboard/DashboardLayout.tsx` — Sidebar Container overflow/shrink Fix
+- `src/lib/poi-cluster.ts` — getChildren() Guard, try/catch Error-Handling
+- `src/components/map/MapView.tsx` — getChildren() Guard, Verified Render Mechanismus
+- `VERSION` — 1.3.4
+- `package.json` — 1.3.4
+- `src/components/sidebar/Sidebar.tsx` — 1.3.4
+- `src/components/dashboard/HeaderBar.tsx` — 1.3.4
+- `src/lib/export.ts` — 1.3.4
+- `src/lib/geocode.ts` — 1.3.4
+- `CHANGELOG.md` — v1.3.4 Eintrag
+
+---
+
 ## [1.3.3] — 2026-04-15
 
 ### Patch — POI Rendering Fix: sourcedata Endlosschleife entfernt

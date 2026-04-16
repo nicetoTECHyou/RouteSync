@@ -10,6 +10,51 @@ Alle Änderungen sind chronologisch dokumentiert. Versionsnummern folgen [Semant
 
 ---
 
+## [1.5.5] — 2026-04-17
+
+### Patch — POI-Datenquelle auf RouteSync-POI-Data korrigiert (fresh repo, 3019 Tiles, 186K POIs)
+
+POI-Datenquelle in `poi-github.ts` zurück auf das dedizierte Repo `nicetoTECHyou/RouteSync-POI-Data` korrigiert. Das Repo wurde frisch erstellt mit allen 3.019 Tiles und 186.081 POIs. Tiles werden nun direkt via jsDelivr CDN aus dem dedizierten POI-Datenbank-Repo geladen (statt aus dem Subfolder des Haupt-Repos), was die Datenpflege und Aktualisierung vereinfacht.
+
+#### Bug Fixes
+- **POI-Datenquelle**: `GITHUB_REPO` und `RAW_BASE` in `poi-github.ts` auf `nicetoTECHyou/RouteSync-POI-Data` korrigiert (vorher: `RouteSyncPush` Subfolder)
+- **Fresh Repo**: RouteSync-POI-Data als eigenständiges Repo mit 3.019 Tiles und 186.081 POIs neu erstellt und gepusht
+- **CDN-Verifikation**: jsDelivr CDN-Zugriff bestätigt (HTTP 200)
+
+#### Geänderte Dateien
+- `src/lib/poi-github.ts` — POI-Datenquelle: RouteSync-POI-Data (dediziertes Repo)
+- `VERSION` — 1.5.5
+- `package.json` — 1.5.5
+- `CHANGELOG.md` — v1.5.5 Eintrag
+- `README.md` — v1.5.5 Badge + Versionshistorie
+
+---
+
+## [1.5.4] — 2026-04-17
+
+### Minor — Worldwide POI-Datenbank: 186K POIs, 3.019 Tiles, 80+ Länder
+
+Integration der weltweiten Ladesäulen-Datenbank aus dem separaten Repo `RouteSync-POI-Data-Worldwide`. Die POI-Abdeckung wurde von Südosteuropa + Türkei (48 Tiles, 74.674 POIs) auf weltweit (3.019 Tiles, 186.081 POIs) erweitert. Alle weltweiten Stationen wurden vom strukturierten Station-Format ins raw Overpass-Element-Format konvertiert und mit den bestehenden Tiles dedupliziert. POI-Datenquelle in `poi-github.ts` korrigiert: zeigt jetzt auf `nicetoTECHyou/RouteSyncPush` (Subfolder `RouteSync-POI-Data`), da der Fine-Grained PAT keinen Push auf `nicetotechyou/RouteSync-POI-Data` zulässt. Die Phase 0.5 GitHub-Tile-Pipeline lädt die Daten automatisch via jsDelivr CDN.
+
+#### New Features
+- **Worldwide POI Database**: 186.081 POIs aus OpenStreetMap (weltweit), darunter 112.429 Ladesäulen, konvertiert und in die RouteSync-POI-Datenbank gemerged. Coverage: 80+ Länder, 2.971 neue Tiles. Top-Operator: Tesla (4.000+), Allego (2.800+), ChargePoint (2.000+), TotalEnergies (1.500+). 7 Kategorien: charging, fuel, restaurant, supermarket, pharmacy, hospital, bicycle_repair.
+- **Converter-Script**: `scripts/merge-worldwide-poi.py` — konvertiert strukturierte Station-Objekte (name, operator, address, power, sockets) zurück zu raw Overpass-Elementen (type, id, lat, lon, tags). Deduplizierung nach OSM-Element-ID. Vollständig kompatibel mit der bestehenden `poi-github.ts` Pipeline.
+
+#### Bug Fixes
+- **P1: POI-Datenquelle zeigte auf falsches Repo (poi-github.ts)**: `GITHUB_REPO` war auf `nicetotechyou/RouteSync-POI-Data` gesetzt (falsche Groß-/Kleinschreibung, nicht per PAT erreichbar). Die App lud nur die alten Südosteuropa-Daten statt der neuen worldwide-Daten (3.019 Tiles).
+  - **Fix**: `GITHUB_REPO` auf `nicetoTECHyou/RouteSyncPush` geändert, `RAW_BASE` um `/RouteSync-POI-Data` Subfolder erweitert. Alle 186.081 POIs werden jetzt korrekt geladen.
+
+#### Geänderte Dateien
+- `src/lib/poi-github.ts` — POI-Datenquelle: RouteSyncPush/RouteSync-POI-Data
+- `RouteSync-POI-Data/tiles/` — 2.971 neue Tiles + 24 merged Tiles (3.019 gesamt)
+- `RouteSync-POI-Data/manifest.json` — v1.1.0 (3019 Tiles, 186.081 POIs, 48.6 MB)
+- `scripts/merge-worldwide-poi.py` — NEU: Worldwide→Overpass Converter + Merger
+- `VERSION` — 1.5.4
+- `package.json` — 1.5.4
+- `CHANGELOG.md` — v1.5.4 Eintrag (POI-Quell-Repo Fix ergänzt)
+
+---
+
 ## [1.5.3] — 2026-04-16
 
 ### Patch — Release-Tar Struktur korrigiert: source.tar + static.tar + VERSION (v1.4.1 Schema)

@@ -10,6 +10,28 @@ Alle Änderungen sind chronologisch dokumentiert. Versionsnummern folgen [Semant
 
 ---
 
+## [1.5.6] — 2026-04-17
+
+### Patch — Rechte Sidebar Clipping Fix: Radix ScrollArea durch nativen Scroll ersetzt
+
+Die rechte Sidebar (POI-Panel) und die linke Sidebar (Route-Panel) wurden abgeschnitten — der "Löschen"-Button bei POI-Ergebnissen war nicht sichtbar, ebenso untere Inhalte der Route-Panel. Ursache war die Radix UI `ScrollArea` Komponente, deren interner Viewport einen 10px breiten Scrollbar renderte, der den Sidebar-Inhalt (320px Breite) auf der rechten Seite verdrängte und abschnitt. In Firefox fehlte zusätzlich die Custom-Scrollbar-Styling.
+
+#### Bug Fixes
+- **P1: Rechte Sidebar abgeschnitten (POIPanel, RoutePanel)**: Radix `ScrollArea` hat intern einen `overflow: scroll` Viewport mit ~10px Scrollbar-Breite eingerichtet. In der 320px Sidebar wurde der Inhalt auf der rechten Seite um 10px verdrängt — Buttons, Texte und POI-Details waren abgeschnitten.
+  - **Fix**: Radix `ScrollArea` in `POIPanel.tsx` und `RoutePanel.tsx` durch natives `<div className="h-full overflow-y-auto custom-scrollbar">` ersetzt. Der `custom-scrollbar` CSS-Klasse (5px WebKit-Scrollbar) reicht aus — kein Radix-Overhead nötig.
+- **P2: Firefox Custom Scrollbar fehlte (globals.css)**: Die `.custom-scrollbar` CSS hatte nur `::-webkit-scrollbar` Regeln, die in Firefox ignoriert werden. Firefox zeigte den Standard-Scrollbar (~17px breit, invasiv).
+  - **Fix**: `scrollbar-width: thin` und `scrollbar-color` für Firefox hinzugefügt. Jetzt 5px in WebKit und thin in Firefox.
+
+#### Geänderte Dateien
+- `src/components/sidebar/POIPanel.tsx` — ScrollArea → nativer overflow-y-auto
+- `src/components/sidebar/RoutePanel.tsx` — ScrollArea → nativer overflow-y-auto
+- `src/app/globals.css` — Firefox scrollbar-width: thin Support
+- `VERSION` — 1.5.6
+- `package.json` — 1.5.6
+- `CHANGELOG.md` — v1.5.6 Eintrag
+
+---
+
 ## [1.5.5] — 2026-04-17
 
 ### Patch — POI-Datenquelle auf RouteSync-POI-Data korrigiert (fresh repo, 3019 Tiles, 186K POIs)

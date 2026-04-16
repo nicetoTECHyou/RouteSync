@@ -6,7 +6,7 @@
 
 **Type 2 AC Charging — 1m Width Verification — Southeast Europe**
 
-**RouteSync v1.5.5**
+**RouteSync v1.5.6**
 
 <br>
 
@@ -15,7 +15,7 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 [![MapLibre](https://img.shields.io/badge/MapLibre_GL-5.22-1AAC71?logo=maplibre&logoColor=white)](https://maplibre.org)
 [![Zustand](https://img.shields.io/badge/Zustand-5-764ABC)](https://github.com/pmndrs/zustand)
-[![Version](https://img.shields.io/badge/Version-1.5.5-10B981)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-1.5.6-10B981)](./CHANGELOG.md)
 
 <br>
 
@@ -246,6 +246,7 @@ Alle Änderungen sind detailliert in der [CHANGELOG.md](./CHANGELOG.md) dokument
 
 | Version | Datum | Typ | Beschreibung |
 |---------|-------|-----|-------------|
+| **1.5.6** | 2026-04-17 | Patch | Rechte Sidebar Clipping Fix: Radix ScrollArea durch nativen Scroll ersetzt |
 | **1.5.5** | 2026-04-17 | Patch | POI-Datenquelle auf RouteSync-POI-Data korrigiert (fresh repo, 3019 Tiles, 186K POIs) |
 | **1.5.4** | 2026-04-17 | Minor | Worldwide POI-Datenbank: 186K POIs, 3.019 Tiles, 80+ Länder |
 | **1.5.3** | 2026-04-16 | Patch | Release-Tar Struktur korrigiert: source.tar + static.tar + VERSION |
